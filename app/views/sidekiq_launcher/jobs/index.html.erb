@@ -1,0 +1,10 @@
+<h1>Sidekiq Launcher</h1>
+
+<% flash.each do |_key, value| %>
+  <% msg = value.is_a?(Array)? safe_join(value, "<br />".html_safe) : value %>
+  <div><%= msg %></div>
+<% end %>
+
+<% @jobs.each do |j| %>
+  <%= render "job", job: j, arg_types: @list_arg_types%>
+<% end %>
