@@ -63,6 +63,7 @@ module SidekiqLauncher
                     when 'boolean'
                       val.in?(%w[true false 1 0])
                     when 'array'
+                      # TODO: Trying to cast as hash breaks if not JSON compatible (user uses '', for example)
                       val.starts_with?('[') && val.ends_with?(']')
                     when 'hash'
                       val.starts_with?('{') && val.ends_with?('}')

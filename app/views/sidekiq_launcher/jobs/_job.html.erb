@@ -1,19 +1,21 @@
 <hr>
-<%= form_with url: jobs_run_path do |f| %>
-  <%= f.hidden_field :job_class, value: job[:class] %>
+<details>
+  <summary id=<%="title_job_#{job[:file_name]}"%>><%=job[:class]%></summary>
+  <%= form_with url: jobs_run_path do |f| %>
+    <%= f.hidden_field :job_class, value: job[:class] %>
 
-  <div><h4 id=<%="title_job_#{job[:file_name]}"%>><%=job[:class]%></h4></div>
-  <small><i><%= f.label job[:file_name] %></i></small>
+    <small><i><%= f.label job[:file_name] %></i></small>
 
-  <% job[:args].each_with_index do |arg| %>
-    <%= f.hidden_field "arg_name_#{arg[:position]}", value: arg[:name] %>
-    <div>
-      <%= f.label arg[:name] %>
-      <%= "*" if arg[:required] %>:
-      <%= f.text_field "arg_value_#{arg[:position]}", required: arg[:required]%>
-      <%= f.select "arg_type_#{arg[:position]}", options_for_select(arg_types) %>
-    </div>
+    <% job[:args].each_with_index do |arg| %>
+      <%= f.hidden_field "arg_name_#{arg[:position]}", value: arg[:name] %>
+      <div>
+        <%= f.label arg[:name] %>
+        <%= "*" if arg[:required] %>:
+        <%= f.text_field "arg_value_#{arg[:position]}", required: arg[:required]%>
+        <%= f.select "arg_type_#{arg[:position]}", options_for_select(arg_types) %>
+      </div>
+    <% end %>
+
+    <div><%= f.submit 'Run Job' %></div>
   <% end %>
-
-  <div><%= f.submit 'Run Job' %></div>
-<% end %>
+</details>
