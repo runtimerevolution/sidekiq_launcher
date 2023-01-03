@@ -13,28 +13,16 @@ module SidekiqLauncher
 
     # Retrieves the list of sidekiq jobs and all their properties
     def sidekiq_jobs
-      jobs_data = []
-
-      # retrieving list of files in the jobs folder
-      job_files = Dir.children(SidekiqLauncher.configuration.jobs_path) || []
-
-      job_files.each do |jf|
-        job_class = jf.delete_suffix('.rb').classify.constantize
-        data = job_data(job_class) if valid_job?(job_class)
-        jobs_data << data if data.present?
-      end
-
-      # TODO: Get other jobs spred throughout the project
-      # TODO: Check class.new.subclasses - must include Sidekiq Worker
-      # TODO: Check Sidekiq::Worker.descendants <- does not work in development
-      # TODO: Activate flag in dev to load all classes
-
-      jobs_data
+      SidekiqLauncher.jobs
     end
 
     # Runs the passed sidekiq job with the passed arguments
     # Returns appropraite feedback messages
     def run_job(params)
+
+      # FIXME: Redo using jobs in memory
+      # TODO: Try to remove casts!
+
       args = build_arguments(params)
       validated = JobContract.new.call(job_class: params[:job_class], arguments: args)
 
@@ -73,47 +61,6 @@ module SidekiqLauncher
     end
 
     private
-
-    # Checks if the passed class name reffers to a valid Sidekiq job
-    def valid_job?(job)
-      # TODO: Check if descends from class
-
-      begin
-        job.new.method(:perform)
-      rescue NameError
-        return false
-      end
-      true
-    end
-
-    # Returns a hash with description data from a job or
-    # nil if job does not match the requirements
-    def job_data(job)
-      # TODO: get the REAL file name
-      # path.to_s.split('/').last
-
-      data = {
-        file_name: "#{job.to_s.gsub(' ', '').underscore}.rb",
-        class: job
-      }
-      data[:args] = params_specification(job)
-      data
-    end
-
-    # Returns the specification for the parameters of the perform method
-    # of the passed class
-    def params_specification(job_class)
-      result = []
-      job_class.new.method(:perform).parameters.each_with_index do |param, i|
-        result << {
-          name: param[1],
-          named: param[0].to_s.include?('key'),
-          required: param[0].to_s.include?('req'),
-          position: i
-        }
-      end
-      result
-    end
 
     # Builds an array of arguments from the passed parameters to be fed
     # to the job contract validator

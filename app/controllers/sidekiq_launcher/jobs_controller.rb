@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'validations/job_contract'
+
 module SidekiqLauncher
   # Controller for running job views
   class JobsController < ApplicationController

@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'dry/validation'
+
 module SidekiqLauncher
   # This contract validates all elements of a job before running it
   # with Sidekiq
@@ -17,8 +18,8 @@ module SidekiqLauncher
     rule(:job_class) do
       err_msg = "#{value} is not a valid Sidekiq job class"
       begin
-        job = value.constantize
-        key.failure("#{err_msg}: Method perform_async not found.") unless job.methods.include?(:perform_async)
+        job_class = value.constantize
+        key.failure("#{err_msg}: Method perform_async not found.") unless job_class.methods.include?(:perform_async)
       rescue StandardError
         key.failure("#{err_msg}: Class not found.")
       end
