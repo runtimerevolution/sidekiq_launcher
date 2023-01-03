@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
+require 'validations/job_contract'
+require 'classes/job'
+
 module SidekiqLauncher
   # This helper encapsulates all logic used to list and run sidekiq jobs from views
   module JobsHelper
-    # Retrieves the possible types of arguments accepted by a sidekiq job
-    # Types are defined as per the sidekiq's documentation on 20 Dec 2022:
-    # https://github.com/mperham/sidekiq/wiki/The-Basics
-    def list_arg_types
-      # TODO: Add Array of <T>???
-      %i[string integer number boolean array hash]
+    # Lists the possible types of arguments accepted by a sidekiq job
+    def arg_types
+      Job.list_arg_types
     end
 
     # Retrieves the list of sidekiq jobs and all their properties
@@ -19,45 +19,27 @@ module SidekiqLauncher
     # Runs the passed sidekiq job with the passed arguments
     # Returns appropraite feedback messages
     def run_job(params)
-
-      # FIXME: Redo using jobs in memory
-      # TODO: Try to remove casts!
+      # TODO: Checking if in list when validating + checking if in list to use below
 
       args = build_arguments(params)
       validated = JobContract.new.call(job_class: params[:job_class], arguments: args)
 
       if validated.success?
-        job_class = params[:job_class].constantize
-        params_specs = params_specification(job_class)
-
-        # TODO: what about named params? And non named? (must keep order) - read params_specs to solve
-        # TODO: Present link to sidekiq queue
-        # TODO: Return failure if something happens when triangulating / casting ?
+        job = SidekiqLauncher.jobs.find { |j| j.job_class.to_s == params[:job_class] }
 
         # Placing params in order. The order is taken from their specification
         job_params = []
-        args.each_with_index do |_ag, i|
-          positioned_param = params_specs.find { |ps| ps[:position] == i }
-          current_arg = args.find { |ag| ag[:name].to_s.eql?(positioned_param[:name].to_s) }
+        job.parameters.each do |job_spec|
+          current_arg = args.find { |ag| ag[:name].to_s.eql?(job_spec[:name].to_s) }
           job_params << cast_value(current_arg[:value], current_arg[:type].to_sym)
         end
 
-        Sidekiq::Client.push('class' => job_class, 'args' => job_params)
+        Sidekiq::Client.push('class' => job.job_class, 'args' => job_params)
 
-        # TODO: check if process actually started and is queued
-        # TODO: TEST: Try to run job with a hash -> check the logs
-
-        success = true
-        messages = ["Sidekiq job #{params[:job_class]} started successfully."]
+        { success: true, messages: ["Sidekiq job #{params[:job_class]} started successfully."] }
       else
-        success = false
-        messages = []
-        validated.errors.each do |err|
-          messages << "#{err.path} #{err.text}"
-        end
+        { success: false, messages: validated.errors.map { |err| "#{err.path} #{err.text}" } }
       end
-
-      { success: success, messages: messages }
     end
 
     private

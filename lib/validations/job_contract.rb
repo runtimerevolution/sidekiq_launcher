@@ -16,6 +16,8 @@ module SidekiqLauncher
     end
 
     rule(:job_class) do
+      # TODO: Find in list of classes
+
       err_msg = "#{value} is not a valid Sidekiq job class"
       begin
         job_class = value.constantize
@@ -38,7 +40,7 @@ module SidekiqLauncher
         end
 
         # checking if passed type exists in list of possible types
-        unless arg[:type].to_sym.in?(JobsController.helpers.list_arg_types)
+        unless arg[:type].to_sym.in?(Job.list_arg_types)
           key.failure("Argument type #{arg[:type]} for argument #{arg[:name]} does not exist")
         end
 

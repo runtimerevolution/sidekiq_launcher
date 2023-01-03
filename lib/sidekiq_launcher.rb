@@ -7,12 +7,6 @@ require 'classes/job'
 
 # Encapsulates all elements from Sidekiq Launcher
 module SidekiqLauncher
-
-  # # TODO: Get other jobs spred throughout the project
-  # # TODO: Check class.new.subclasses - must include Sidekiq Worker
-  # # TODO: Check Sidekiq::Worker.descendants <- does not work in development
-  # # TODO: Activate flag in dev to load all classes
-
   class << self
     # Users are able to both read and write their configuaration options
     attr_writer :configuration
@@ -46,8 +40,6 @@ module SidekiqLauncher
     # Loads all sidekiq jobs from the current application
     # Returns the list of jobs
     def load_jobs
-      # TODO: What if they have the same name but are from different modules?
-
       @jobs = []
 
       possible_jobs = []
@@ -63,13 +55,7 @@ module SidekiqLauncher
 
     # Loads sidekiq job classes from the cached classes
     def load_job_classes_from_cache
-      result = []
-      ObjectSpace.each_object(Class) do |cl|
-        result << cl if cl.include?(Sidekiq::Job)
-      rescue NoMethodError
-        next
-      end
-      result
+      ObjectSpace.each_object(Class).select { |child| child < Sidekiq::Worker::Options && child.include?(Sidekiq::Job) }
     end
 
     # Loads sidekiq job classes from the configured paths

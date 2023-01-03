@@ -1,11 +1,18 @@
 # frozen_string_literal: true
 
 module SidekiqLauncher
-  # TODO:
+  # This class represents a wrapper for a Sidekiq job, containing all its properties
+  # and specifications of its parameters
   class Job
-    # TODO: Enum with possible types? Or string array?
-
     attr_reader :job_class, :file_name, :parameters
+
+    # Retrieves the possible types of arguments accepted by a sidekiq job
+    # Types are defined as per the sidekiq's documentation on 20 Dec 2022:
+    # https://github.com/mperham/sidekiq/wiki/The-Basics
+    def self.list_arg_types
+      # TODO: Add Array of <T>???
+      %i[string integer number boolean array hash]
+    end
 
     def initialize(job_class)
       @job_class = job_class
@@ -19,13 +26,17 @@ module SidekiqLauncher
     # of the sidekiq job class
     def build_param_details
       result = []
-      @job_class.new.method(:perform).parameters.each_with_index do |param, i|
-        result << {
-          name: param[1],
-          named: param[0].to_s.include?('key'),
-          required: param[0].to_s.include?('req'),
-          position: i
-        }
+      begin
+        @job_class.new.method(:perform).parameters.each_with_index do |param, i|
+          result << {
+            name: param[1],
+            named: param[0].to_s.include?('key'),
+            required: param[0].to_s.include?('req'),
+            position: i
+          }
+        end
+      rescue StandardError => e
+        puts("ERROR: Unable to find method :perform for class #{job_class}: #{e.message}")
       end
       result
     end
