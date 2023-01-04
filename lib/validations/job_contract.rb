@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'dry/validation'
+
 module SidekiqLauncher
   # This contract validates all elements of a job before running it
   # with Sidekiq
@@ -15,10 +16,12 @@ module SidekiqLauncher
     end
 
     rule(:job_class) do
+      # TODO: Find in list of classes
+
       err_msg = "#{value} is not a valid Sidekiq job class"
       begin
-        job = value.constantize
-        key.failure("#{err_msg}: Method perform_async not found.") unless job.methods.include?(:perform_async)
+        job_class = value.constantize
+        key.failure("#{err_msg}: Method perform_async not found.") unless job_class.methods.include?(:perform_async)
       rescue StandardError
         key.failure("#{err_msg}: Class not found.")
       end
@@ -37,7 +40,7 @@ module SidekiqLauncher
         end
 
         # checking if passed type exists in list of possible types
-        unless arg[:type].to_sym.in?(JobsController.helpers.list_arg_types)
+        unless arg[:type].to_sym.in?(Job.list_arg_types)
           key.failure("Argument type #{arg[:type]} for argument #{arg[:name]} does not exist")
         end
 

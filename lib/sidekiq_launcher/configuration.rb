@@ -3,10 +3,10 @@
 module SidekiqLauncher
   # This class encapsulates the configuration for the Sidekiq Launcher gem
   class Configuration
-    attr_accessor :jobs_path
+    attr_accessor :job_paths
 
     def initialize
-      @jobs_path = Rails.root.join('app', 'sidekiq')
+      @job_paths = [Rails.root.join('app', 'sidekiq')]
     end
   end
 end
