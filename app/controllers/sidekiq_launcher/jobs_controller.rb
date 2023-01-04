@@ -4,9 +4,8 @@ module SidekiqLauncher
   # Controller for running job views
   class JobsController < ApplicationController
     def index
-      # TODO: Message if path not available
-      # TODO: Message if sidekiq not installed (returns uninitialized constant)
-      # TODO: Probably use exceptions
+      @sidekiq_installed = helpers.sidekiq_installed?
+      return unless @sidekiq_installed
 
       @list_arg_types = helpers.arg_types
       @jobs = helpers.sidekiq_jobs
