@@ -5,6 +5,18 @@
   <div><%= msg %></div>
 <% end %>
 
-<% @jobs.each do |j| %>
-  <%= render "job", job: j, arg_types: @list_arg_types%>
+<% if @sidekiq_installed %>
+
+  <% if @jobs.empty? %>
+    <div><h4>No sidekiq jobs were found in your application</h4></div>
+    <div>Please check your autoload configuration and/or your configured sidekiq jobs' paths</div>
+
+  <% else %>
+    <% @jobs.each do |j| %>
+      <%= render "job", job: j, arg_types: @list_arg_types%>
+    <% end %>
+  <% end %>
+
+<% else %>
+  Error: Sidekiq gem is not installed in your application
 <% end %>

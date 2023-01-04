@@ -6,6 +6,11 @@ require 'classes/job'
 module SidekiqLauncher
   # This helper encapsulates all logic used to list and run sidekiq jobs from views
   module JobsHelper
+    # Returns whether the Sidekiq gem is installed or not
+    def sidekiq_installed?
+      SidekiqLauncher.sidekiq_installed?
+    end
+
     # Lists the possible types of arguments accepted by a sidekiq job
     def arg_types
       Job.list_arg_types

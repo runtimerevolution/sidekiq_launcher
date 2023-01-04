@@ -11,6 +11,11 @@ module SidekiqLauncher
     # Users are able to both read and write their configuaration options
     attr_writer :configuration
 
+    # Checks if the Sidekiq gem is installed
+    def sidekiq_installed?
+      Object.const_defined?('Sidekiq')
+    end
+
     # List of sidekiq jobs and their specifications
     def jobs
       @jobs || load_jobs
@@ -66,9 +71,11 @@ module SidekiqLauncher
 
       if paths.is_a?(Array)
         paths.each do |path|
+          next unless File.directory?(path)
+
           job_files.concat(Dir.children(path))
         end
-      else
+      elsif File.directory?(paths)
         job_files.concat(Dir.children(paths))
       end
 
