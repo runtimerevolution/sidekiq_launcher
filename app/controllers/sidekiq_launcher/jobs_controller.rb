@@ -14,7 +14,7 @@ module SidekiqLauncher
     def run
       result = helpers.run_job(params)
       flash.alert = result[:messages]
-      redirect_back(fallback_location: jobs_path)
+      redirect_back(fallback_location: sidekiq_launcher_jobs_path)
     end
   end
 end

@@ -1,7 +1,7 @@
 <hr>
 <details>
   <summary id=<%="title_job_#{job.file_name}"%>><%=job.job_class%></summary>
-  <%= form_with url: jobs_run_path do |f| %>
+  <%= form_with url: sidekiq_launcher_run_path do |f| %>
     <%= f.hidden_field :job_class, value: job.job_class %>
 
     <small><i><%= f.label job.file_name %></i></small>
