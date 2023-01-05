@@ -3,7 +3,7 @@ PATH
   specs:
     sidekiq_launcher (0.1.1)
       dry-validation (<= 1.10.0)
-      rb_json5
+      rb_json5 (>= 0.3.0)
 
 GEM
   remote: https://rubygems.org/
