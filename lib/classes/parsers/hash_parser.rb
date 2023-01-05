@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'rb_json5'
+
 module SidekiqLauncher
   # This class validates if a given string object represents a hash
   # and casts it as such
@@ -9,8 +11,10 @@ module SidekiqLauncher
     def try_parse(val)
       return unless validate?(val)
 
+      # Using relaxed JSON parser to support hash symbols without quotes
+      # If for some reason the gem is not available anymore, we use the standard JSON parse
       begin
-        eval(val) # rubocop:disable Security/Eval
+        Object.const_defined?('RbJSON5') ? RbJSON5.parse(val) : JSON.parse(val)
       rescue SyntaxError, StandardError
         nil
       end
