@@ -16,9 +16,9 @@ module SidekiqLauncher
     end
 
     rule(:job_class) do
-      # TODO: Find in list of classes
+      err_msg = "Unable to run #{value} Sidekiq job"
 
-      err_msg = "#{value} is not a valid Sidekiq job class"
+      key.failure("#{err_msg}: Job not loaded.") unless SidekiqLauncher.job_props(value).present?
       begin
         job_class = value.constantize
         key.failure("#{err_msg}: Method perform_async not found.") unless job_class.methods.include?(:perform_async)
@@ -47,34 +47,9 @@ module SidekiqLauncher
         # Preventing implicit conversion errors
         val = (arg[:value].is_a?(String) ? arg[:value].to_s : arg[:value]) || ''
 
+        # Failing empty required arguments
         required = job_p[0].to_s.include?('req')
-        if val.delete(' ').eql?('') || !val.present?
-          # Skipping empty non required arguments
-          next unless required
-
-          # Failing empty required arguments
-          key.failure("Parameter #{arg[:name]} is required") if required
-        end
-
-        validated = case arg[:type]
-                    when 'string'
-                      true
-                    when 'integer'
-                      !val.match(/^(\d)+$/).nil?
-                    when 'number'
-                      !val.match(/\A[+-]?\d+(\.\d+)?\z/).nil?
-                    when 'boolean'
-                      val.in?(%w[true false 1 0])
-                    when 'array'
-                      # TODO: Trying to cast as hash breaks if not JSON compatible (user uses '', for example)
-                      val.starts_with?('[') && val.ends_with?(']')
-                    when 'hash'
-                      val.starts_with?('{') && val.ends_with?('}')
-                    else
-                      false
-                    end
-
-        key.failure("Argument #{arg[:name]} is not a valid #{arg[:type]}") unless validated
+        key.failure("Parameter #{arg[:name]} is required") if required && (val.delete(' ').eql?('') || !val.present?)
       end
     end
   end

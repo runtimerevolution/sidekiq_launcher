@@ -10,7 +10,6 @@ module SidekiqLauncher
     # Types are defined as per the sidekiq's documentation on 20 Dec 2022:
     # https://github.com/mperham/sidekiq/wiki/The-Basics
     def self.list_arg_types
-      # TODO: Add Array of <T>???
       %i[string integer number boolean array hash]
     end
 
@@ -24,6 +23,7 @@ module SidekiqLauncher
 
     # Build the specification for the parameters of the perform method
     # of the sidekiq job class
+    # TODO: type: nil is there to implement types from RBS
     def build_param_details
       result = []
       begin
@@ -32,12 +32,14 @@ module SidekiqLauncher
             name: param[1],
             named: param[0].to_s.include?('key'),
             required: param[0].to_s.include?('req'),
-            position: i
+            position: i,
+            type: nil
           }
         end
       rescue StandardError => e
         puts("ERROR: Unable to find method :perform for class #{job_class}: #{e.message}")
       end
+
       result
     end
   end
