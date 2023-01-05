@@ -2,6 +2,7 @@
 
 require 'validations/job_contract'
 require 'classes/job'
+require 'classes/type_parser'
 
 module SidekiqLauncher
   # This helper encapsulates all logic used to list and run sidekiq jobs from views
@@ -24,26 +25,21 @@ module SidekiqLauncher
     # Runs the passed sidekiq job with the passed arguments
     # Returns appropraite feedback messages
     def run_job(params)
-      # TODO: Checking if in list when validating + checking if in list to use below
+      args = prep_params_input(params)
+      validation = JobContract.new.call(job_class: params[:job_class], arguments: args)
 
-      args = build_arguments(params)
-      validated = JobContract.new.call(job_class: params[:job_class], arguments: args)
+      if validation.success?
+        job = SidekiqLauncher.job_props(params[:job_class])
+        params_data = build_job_params(job, args)
 
-      if validated.success?
-        job = SidekiqLauncher.jobs.find { |j| j.job_class.to_s == params[:job_class] }
-
-        # Placing params in order. The order is taken from their specification
-        job_params = []
-        job.parameters.each do |job_spec|
-          current_arg = args.find { |ag| ag[:name].to_s.eql?(job_spec[:name].to_s) }
-          job_params << cast_value(current_arg[:value], current_arg[:type].to_sym)
+        if params_data[:success]
+          Sidekiq::Client.push('class' => job.job_class, 'args' => params_data[:params])
+          { success: true, messages: ["Sidekiq job #{params[:job_class]} started successfully."] }
+        else
+          { success: false, messages: params_data[:errors] }
         end
-
-        Sidekiq::Client.push('class' => job.job_class, 'args' => job_params)
-
-        { success: true, messages: ["Sidekiq job #{params[:job_class]} started successfully."] }
       else
-        { success: false, messages: validated.errors.map { |err| "#{err.path} #{err.text}" } }
+        { success: false, messages: validation_error_messages(validation) }
       end
     end
 
@@ -51,7 +47,7 @@ module SidekiqLauncher
 
     # Builds an array of arguments from the passed parameters to be fed
     # to the job contract validator
-    def build_arguments(params)
+    def prep_params_input(params)
       args = []
       incoming_args = params.each.select { |a| a[0]&.include?('arg_name_') }
 
@@ -67,21 +63,37 @@ module SidekiqLauncher
       args
     end
 
-    def cast_value(val, type)
-      case type
-      when :integer
-        val.to_i
-      when :number
-        val.to_f
-      when :boolean
-        val.in?(%w[true false 1 0])
-      when :array
-        JSON.parse(val) # TODO: [1, 2, 3, 4, 'cenas' ] is not parsable -> doc it so the user knows
-      when :hash
-        # TODO:
-      else
-        val
+    # Build the job's parameters as an array of parameters with the expected types
+    # This array is properly ordered as per the job's parameters
+    def build_job_params(job, args)
+      result = []
+      errors = []
+
+      # NOTE: job.parameters are retrieved in order
+      job&.parameters&.each do |param_specs|
+        matching_input = find_param_in_input(args, param_specs[:name])
+
+        # We cast the parameter to the passed type unless specified by the parameter's specifications
+        param_value = TypeParser.new.try_parse_as(matching_input[:value], param_specs[:type] || matching_input[:type])
+
+        if param_value.present?
+          result << param_value
+        else
+          errors << "Argument #{matching_input[:name]} is not a valid #{matching_input[:type]}"
+        end
       end
+
+      { success: errors.empty?, errors: errors, params: result }
+    end
+
+    # Finds the parameter with the passed name from the list of input arguments
+    def find_param_in_input(args, name)
+      args.find { |ag| ag[:name].to_s.eql?(name.to_s) }
+    end
+
+    # Returns an array with all validation errors to be presented to the user in the UI
+    def validation_error_messages(validation)
+      validation&.errors&.map { |err| "#{err.path} #{err.text}" }
     end
   end
 end

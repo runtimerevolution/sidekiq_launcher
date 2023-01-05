@@ -26,6 +26,11 @@ module SidekiqLauncher
       load_jobs
     end
 
+    # Returns the properties of the job with the passed name as String
+    def job_props(class_name)
+      @jobs&.find { |j| j.job_class.to_s == class_name }
+    end
+
     # Returns the current configuration
     def configuration
       @configuration ||= Configuration.new
@@ -87,7 +92,8 @@ module SidekiqLauncher
 
     # Checks if the passed class name reffers to a valid Sidekiq job
     def valid_job_class?(job_class)
-      # TODO: Check if descends from class?
+      return false unless job_class < Sidekiq::Worker::Options
+      return false unless job_class.include?(Sidekiq::Job)
 
       begin
         job_class.new.method(:perform)
