@@ -52,11 +52,9 @@ module SidekiqLauncher
     def load_jobs
       @jobs = []
 
-      possible_jobs = []
-      possible_jobs.concat(load_job_classes_from_cache)
-      possible_jobs.concat(load_classes_from_config_paths)
-
-      # TODO: Remove duplicates from list
+      possible_jobs = Set[]
+      possible_jobs.merge(load_job_classes_from_cache)
+      possible_jobs.merge(load_classes_from_config_paths)
 
       possible_jobs.each do |pj|
         @jobs << Job.new(pj) if valid_job_class?(pj)
