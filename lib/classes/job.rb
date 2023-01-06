@@ -4,7 +4,7 @@ module SidekiqLauncher
   # This class represents a wrapper for a Sidekiq job, containing all its properties
   # and specifications of its parameters
   class Job
-    attr_reader :job_class, :file_name, :parameters
+    attr_reader :job_class, :file_path, :parameters
 
     # Retrieves the possible types of arguments accepted by a sidekiq job
     # Types are defined as per the sidekiq's documentation on 20 Dec 2022:
@@ -14,8 +14,10 @@ module SidekiqLauncher
     end
 
     def initialize(job_class)
+      root_folder = Rails.application.class.module_parent_name.underscore
+
       @job_class = job_class
-      @file_name = Class.const_source_location(job_class.to_s)[0]&.split('/')&.last || 'File not found'
+      @file_path = Class.const_source_location(job_class.to_s)[0]&.split(root_folder)&.last || 'File not found'
       @parameters = build_param_details
     end
 
@@ -30,7 +32,6 @@ module SidekiqLauncher
         @job_class.new.method(:perform).parameters.each_with_index do |param, i|
           result << {
             name: param[1],
-            named: param[0].to_s.include?('key'),
             required: param[0].to_s.include?('req'),
             position: i,
             type: nil

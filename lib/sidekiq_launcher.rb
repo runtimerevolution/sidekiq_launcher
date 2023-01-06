@@ -52,9 +52,9 @@ module SidekiqLauncher
     def load_jobs
       @jobs = []
 
-      possible_jobs = []
-      possible_jobs.concat(load_job_classes_from_cache)
-      possible_jobs.concat(load_job_classes_from_dirs)
+      possible_jobs = Set[]
+      possible_jobs.merge(load_job_classes_from_cache)
+      possible_jobs.merge(load_classes_from_config_paths)
 
       possible_jobs.each do |pj|
         @jobs << Job.new(pj) if valid_job_class?(pj)
@@ -68,26 +68,49 @@ module SidekiqLauncher
       ObjectSpace.each_object(Class).select { |child| child < Sidekiq::Worker::Options && child.include?(Sidekiq::Job) }
     end
 
-    # Loads sidekiq job classes from the configured paths
-    def load_job_classes_from_dirs
+    # Loads all classes from the configured paths
+    def load_classes_from_config_paths
       result = []
-      job_files = []
       paths = SidekiqLauncher.configuration.job_paths
+      paths = [paths] unless paths.is_a?(Array)
 
-      if paths.is_a?(Array)
-        paths.each do |path|
-          next unless File.directory?(path)
+      paths.each do |path|
+        next unless File.directory?(path)
 
-          job_files.concat(Dir.children(path))
-        end
-      elsif File.directory?(paths)
-        job_files.concat(Dir.children(paths))
-      end
-
-      job_files.each do |jf|
-        result << jf.delete_suffix('.rb').classify.constantize
+        result.concat(load_classes_from_path(path))
       end
       result
+    end
+
+    # Loads all classes from a single dir
+    def load_classes_from_path(path)
+      result = []
+      Dir.children(path).each do |file_name|
+        file = path.to_s.concat("/#{file_name}")
+        klass = class_name_from_file(file)
+
+        # Loading class if not loaded
+        require file unless Object.const_defined?(klass)
+        begin
+          result << klass.constantize unless klass == ''
+        rescue NameError
+          nil
+        end
+      end
+      result
+    end
+
+    # Build a class name from a class file
+    def class_name_from_file(file)
+      klass = ''
+      File.readlines(file).each do |line|
+        klass = ("#{klass}#{line.split[1]}::" || '') if line.include?('module')
+        next unless line.include?('class')
+
+        klass = ("#{klass}#{line.split[1]}" || '')
+        break
+      end
+      klass
     end
 
     # Checks if the passed class name reffers to a valid Sidekiq job
@@ -96,7 +119,12 @@ module SidekiqLauncher
       return false unless job_class.include?(Sidekiq::Job)
 
       begin
-        job_class.new.method(:perform)
+        perform_method = job_class.new.method(:perform)
+
+        # Jobs cannot have named methods
+        perform_method.parameters.each do |param|
+          return false if param[0].to_s.include?('key')
+        end
       rescue NameError
         return false
       end
