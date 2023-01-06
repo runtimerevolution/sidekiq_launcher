@@ -1,10 +1,10 @@
 <hr>
 <details>
-  <summary id=<%="title_job_#{job.file_name}"%>><%=job.job_class%></summary>
+  <summary id=<%="title_job_#{job.file_path}"%>><%=job.job_class%></summary>
   <%= form_with url: sidekiq_launcher_run_path do |f| %>
     <%= f.hidden_field :job_class, value: job.job_class %>
 
-    <small><i><%= f.label job.file_name %></i></small>
+    <small><i><%= f.label job.file_path %></i></small>
 
     <% job.parameters.each_with_index do |param| %>
       <%= f.hidden_field "arg_name_#{param[:position]}", value: param[:name] %>
