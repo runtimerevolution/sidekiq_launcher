@@ -119,7 +119,12 @@ module SidekiqLauncher
       return false unless job_class.include?(Sidekiq::Job)
 
       begin
-        job_class.new.method(:perform)
+        perform_method = job_class.new.method(:perform)
+
+        # Jobs cannot have named methods
+        perform_method.parameters.each do |param|
+          return false if param[0].to_s.include?('key')
+        end
       rescue NameError
         return false
       end

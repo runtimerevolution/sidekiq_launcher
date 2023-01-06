@@ -30,7 +30,6 @@ module SidekiqLauncher
         @job_class.new.method(:perform).parameters.each_with_index do |param, i|
           result << {
             name: param[1],
-            named: param[0].to_s.include?('key'),
             required: param[0].to_s.include?('req'),
             position: i,
             type: nil
