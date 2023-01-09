@@ -28,28 +28,27 @@ module SidekiqLauncher
     end
 
     rule(:arguments) do
-      # retrieving params so we can directly check their validity against the Sidekiq Job class
-      perform_method = values[:job_class].constantize&.new&.method(:perform)
-      key.failure("#{values[:job_class]} does not contain a method named perform") unless perform_method.present?
+      job = SidekiqLauncher.job_props(values[:job_class])
+      key.failure("Job #{values[:job_class]} is not loaded.") unless job.present?
 
       value.each do |arg|
-        job_p = perform_method&.parameters&.find { |p| p[1].to_s == arg[:name] }
+        job_param = job.param_specs(arg[:name])
 
-        unless job_p.present?
+        if job_param.present?
+          # checking if passed type exists in list of allowed types
+          unless arg[:type].to_sym.in?(job_param[:allowed_types])
+            key.failure("Argument type #{arg[:type]} for argument #{arg[:name]} does not exist")
+          end
+
+          # Preventing implicit conversion errors
+          val = (arg[:value].is_a?(String) ? arg[:value].to_s : arg[:value]) || ''
+
+          # Failing empty required arguments
+          key.failure("Parameter #{arg[:name]} is required") if job_param[:required] == true &&
+                                                                (!val.present? || val.delete(' ').eql?(''))
+        else
           key.failure("#{values[:job_class]}.perform does not contain a parameter named #{arg[:name]}")
         end
-
-        # checking if passed type exists in list of possible types
-        unless arg[:type].to_sym.in?(Job.list_arg_types)
-          key.failure("Argument type #{arg[:type]} for argument #{arg[:name]} does not exist")
-        end
-
-        # Preventing implicit conversion errors
-        val = (arg[:value].is_a?(String) ? arg[:value].to_s : arg[:value]) || ''
-
-        # Failing empty required arguments
-        required = job_p[0].to_s.include?('req')
-        key.failure("Parameter #{arg[:name]} is required") if required && (val.delete(' ').eql?('') || !val.present?)
       end
     end
   end

@@ -13,7 +13,7 @@
 
   <% else %>
     <% @jobs.each do |j| %>
-      <%= render "job", job: j, arg_types: @list_arg_types%>
+      <%= render "job", job: j %>
     <% end %>
   <% end %>
 
