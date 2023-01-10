@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require_relative 'param_type_readers/default_adapter'
+require_relative 'param_type_readers/rbs_adapter'
+require_relative 'param_type_readers/swagger_adapter'
+
 module SidekiqLauncher
   # This class represents a wrapper for a Sidekiq job, containing all its properties
   # and specifications of its parameters
@@ -15,9 +19,9 @@ module SidekiqLauncher
 
     def initialize(job_class)
       root_folder = Rails.application.class.module_parent_name.underscore
-
       @job_class = job_class
       @file_path = Class.const_source_location(job_class.to_s)[0]&.split(root_folder)&.last || 'File not found'
+      @param_types_reader = find_param_types_reader
       @parameters = build_param_details
     end
 
@@ -39,7 +43,7 @@ module SidekiqLauncher
             name: param[1].to_s,
             required: param[0].to_s.include?('req'),
             position: i,
-            allowed_types: find_allowed_types(param[1])
+            allowed_types: @param_types_reader.allowed_types_for(param[1].to_s)
           }
         end
       rescue StandardError => e
@@ -49,73 +53,12 @@ module SidekiqLauncher
       result
     end
 
-    # Defines the type of the passed parameter in case it is defined
-    # Looks for both RBS or Swagger for hints of type definition
-    # If unable to find the type, returns nil, and it becomes the user's responsibility
-    # to define this parameter's type
-    def find_allowed_types(param_name)
-      build_param_type_defs
-      allowed_types(param_name.to_s)
-    end
-
-    # Returns an array with the lines containing parameter definitions
-    def build_param_type_defs
-      # We only search for the file once
-      return if @sig_file_path.present?
-
-      @sig_file_path = "#{@file_path.delete_prefix('/app/').delete_suffix('.rb')}.rbs"
-      sig_file = Rails.root.join('sig', @sig_file_path)
-      return unless File.exist?(sig_file)
-
-      # Params definitions may include multiple lines
-      reading_params = false
-      type_lines = []
-      File.readlines(sig_file).each do |line|
-        reading_params = true if line.include?('perform:')
-
-        if reading_params
-          type_lines << line
-          break if line.include?('->')
-        end
-      end
-
-      @param_type_defs = build_param_types_list(type_lines)
-    end
-
-    # Creates an array of type definitions from the array of lines
-    def build_param_types_list(type_lines)
-      type_lines = type_lines.join(' ')
-      type_lines = type_lines.delete_prefix("#{type_lines.split('(').first}(")
-      type_lines = type_lines.delete_suffix(")#{type_lines.split(')').last}")
-      type_lines.split(',')
-    end
-
-    # Retrieves the type for the passed parameter
-    def allowed_types(param_name)
-      return Job.list_arg_types unless @param_type_defs.present?
-
-      type_def = @param_type_defs.grep(/.*#{param_name}\Z/).first
-      return build_allowed_types_from_def(type_def) if type_def.present?
-
-      Job.list_arg_types
-    end
-
-    # Build a list of allowed types from the parameter's type description
-    def build_allowed_types_from_def(type_def)
-      result = []
-      # We must check array first, because it could be an array of type
-      if type_def.include?('Array')
-        result << :array
-        # Removing types from array definitions. Ex:
-        # "Array[Integer | String] | Integer" becomes "Array | Integer"
-        type_def = type_def.gsub(/\[.*?\]/, '')
-      end
-      result << :integer if type_def.include?('Integer')
-      result << :number if type_def.include?('Numeric')
-      result << :boolean if type_def.include?('Boolean')
-      result << :hash if type_def.include?('Hash')
-      result << :string if type_def.include?('String')
-      result
+    # Picks a parameter type reader for the current job, depending on what
+    # is available to it
+    def find_param_types_reader
+      ParamTypeReaders::RbsAdapter.new(@file_path).available? ||
+        ParamTypeReaders::SwaggerAdapter.new(@file_path).available? ||
+        ParamTypeReaders::DefaultAdapter.new
     end
   end
 end

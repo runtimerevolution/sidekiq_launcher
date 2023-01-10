@@ -96,6 +96,7 @@ module SidekiqLauncher
           nil
         end
 
+        # If we enter the NameError exception, we still want to try to constantize the class
         begin
           result << klass.constantize unless klass == ''
         rescue NameError
