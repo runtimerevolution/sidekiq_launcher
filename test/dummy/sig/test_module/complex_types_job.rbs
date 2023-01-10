@@ -1,0 +1,7 @@
+module TestModule
+  class ComplexTypesJob
+    include Sidekiq::Job
+
+    def perform: (Integer | Numeric number, Numeric count, Array[String] | Hash | String stuff) -> untyped
+  end
+end

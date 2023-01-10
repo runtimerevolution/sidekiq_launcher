@@ -102,8 +102,6 @@ module SidekiqLauncher
 
     # Build a list of allowed types from the parameter's type description
     def build_allowed_types_from_def(type_def)
-      # TODO: verify types syntax
-
       result = []
       # We must check array first, because it could be an array of type
       if type_def.include?('Array')

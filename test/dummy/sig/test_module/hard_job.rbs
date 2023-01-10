@@ -1,7 +1,0 @@
-module TestModule
-  class HardJob
-    include Sidekiq::Job
-
-    def perform: (String name, Numeric | Integer count, Array[untyped] stuff) -> untyped
-  end
-end

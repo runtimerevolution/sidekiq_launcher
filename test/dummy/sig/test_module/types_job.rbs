@@ -1,0 +1,7 @@
+module TestModule
+  class TypesJob
+    include Sidekiq::Job
+
+    def perform: (String name, Numeric count, Array[untyped] stuff) -> untyped
+  end
+end

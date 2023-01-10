@@ -89,8 +89,13 @@ module SidekiqLauncher
         file = path.to_s.concat("/#{file_name}")
         klass = class_name_from_file(file)
 
-        # Loading class if not loaded
-        require file unless Object.const_defined?(klass)
+        begin
+          # Loading class if not loaded
+          require file unless Object.const_defined?(klass)
+        rescue NameError
+          nil
+        end
+
         begin
           result << klass.constantize unless klass == ''
         rescue NameError
