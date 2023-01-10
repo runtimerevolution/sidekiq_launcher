@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module TestModule
+module SidekiqYard
   class TypesJob
     include Sidekiq::Job
 

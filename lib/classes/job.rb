@@ -2,7 +2,7 @@
 
 require_relative 'param_type_readers/default_adapter'
 require_relative 'param_type_readers/rbs_adapter'
-require_relative 'param_type_readers/swagger_adapter'
+require_relative 'param_type_readers/yard_adapter'
 
 module SidekiqLauncher
   # This class represents a wrapper for a Sidekiq job, containing all its properties
@@ -57,7 +57,7 @@ module SidekiqLauncher
     # is available to it
     def find_param_types_reader
       ParamTypeReaders::RbsAdapter.new(@file_path).available? ||
-        ParamTypeReaders::SwaggerAdapter.new(@file_path).available? ||
+        ParamTypeReaders::YardAdapter.new(@file_path).available? ||
         ParamTypeReaders::DefaultAdapter.new
     end
   end

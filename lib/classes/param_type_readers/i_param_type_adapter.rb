@@ -3,7 +3,7 @@
 module ParamTypeReaders
   # This interface declares the methods to be implemented by ParamTypeReader Adapters
   # Their responsibility is to allow the consultation of expected parameter types depending
-  # on the used declaration system (RBS, Swagger docs, etc...)
+  # on the used declaration system (RBS, Yard docs, etc...)
   class IParamTypeAdapter
     # Initialize the class with the parameters required to check the adapter's availiability
     def initialize(*params) end
@@ -16,7 +16,7 @@ module ParamTypeReaders
       raise 'To be implemented by subclass'
     end
 
-    # Returns the allowed types for the passed parameter
+    # Returns an array with the allowed types for the passed parameter
     # If unable to find any, should return the default list
     # from SidekiqLauncher::Job.list_arg_types
     def allowed_types_for(_param_name)

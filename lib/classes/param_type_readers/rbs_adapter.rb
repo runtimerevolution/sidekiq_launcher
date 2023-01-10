@@ -4,6 +4,10 @@ require_relative 'i_param_type_adapter'
 require 'classes/job'
 
 module ParamTypeReaders
+
+  # TODO: build dictionary on load
+  # [param_name => [allowed_type_a, allowed_type_b]]
+
   # Checks expected parameter types for the passed job, declared in the matching .rbs file
   class RbsAdapter < IParamTypeAdapter
     def initialize(file_path)

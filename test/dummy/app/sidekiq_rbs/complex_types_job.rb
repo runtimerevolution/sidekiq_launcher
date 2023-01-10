@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module TestModule
+module SidekiqRbs
   class ComplexTypesJob
     include Sidekiq::Job
 
