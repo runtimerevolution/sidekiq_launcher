@@ -16,7 +16,7 @@
             <% if param[:allowed_types].count > 1 %>
               <%= f.select "arg_type_#{param[:position]}", options_for_select(param[:allowed_types]) %>
             <% else %>
-              <%= f.label param[:allowed_types][0] %>
+              <div class="color-info" style="font-size: 10pt">&nbsp<%= f.label param[:allowed_types][0] %></div>
               <%= f.hidden_field "arg_type_#{param[:position]}", value: param[:allowed_types][0] %>
             <% end %>
           </td>
