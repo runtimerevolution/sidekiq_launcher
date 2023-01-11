@@ -6,11 +6,12 @@ module ParamTypeReaders
   # on the used declaration system (RBS, Yard docs, etc...)
   class IParamTypeAdapter
     # Initialize the class with the parameters required to check the adapter's availiability
+    # and to build the list of parameter types, if possible
     def initialize(*params) end
 
     # Checks preconditions to know if the current adapter is available
-    # for the current sidekiq job
-    # Requirements for this check should be passed in the Adapter's constructor
+    # Usually, it is available if it was able to find and interpret the expected types
+    # for the job's parameters
     # Returns self or nil depending on if the Sidekiq Job meets the requirements for the adapter
     def available?
       raise 'To be implemented by subclass'

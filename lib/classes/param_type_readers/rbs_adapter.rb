@@ -27,10 +27,10 @@ module ParamTypeReaders
 
     private
 
+    # Builds the list of parameter types for every parameter
     def build_param_types(sig_file)
       result = {}
       types_list = read_types_from_file(sig_file)
-      # ["Integer | Numeric number", " Numeric count", " Array[String] | Hash | String stuff"]
       types_list.each do |entry|
         param_name = entry.split.last
         result[param_name] = build_allowed_types_from_def(entry)
@@ -38,6 +38,7 @@ module ParamTypeReaders
       result
     end
 
+    # Reads the list of parameter types for a single parameter
     def read_types_from_file(sig_file)
       # Params definitions may include multiple lines
       reading_params = false
@@ -58,7 +59,7 @@ module ParamTypeReaders
       type_lines.split(',')
     end
 
-    # Build a list of allowed types from the parameter's type description
+    # Build a curated list of allowed types from the parameter's type description
     def build_allowed_types_from_def(type_def)
       result = []
       # We must check array first, because it could be an array of type

@@ -52,6 +52,11 @@ By default Sidekiq Launcher will try to find Sidekiq Jobs in two ways:
 - Sidekiq Job class files placed in the '/app/sidekiq' diretory. You can specify one or more paths to direct Sidekiq Launcher to your Job files (see section 'Configuring Sidekiq Launcher' below).
 
 
+### Defining Job Parameters
+Sidekiq Launcher incorporates RBS and Yard docs support. Job parameter types are automatically defined if properly outlined with either of these gems.
+If your project does not include any of these gems, parameter types will have to be chosen when running Sidekiq Jobs through the UI.
+
+
 ## Sidekiq Launcher Configuration
 
 ### Setting Up Paths
