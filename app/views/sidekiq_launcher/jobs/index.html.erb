@@ -1,22 +1,27 @@
-<h1>Sidekiq Launcher</h1>
+<h1><i class="fa fa-rocket" style="margin-right: 0.5rem"></i>Sidekiq Launcher</h1>
 
-<% flash.each do |_key, value| %>
-  <% msg = value.is_a?(Array)? safe_join(value, "<br />".html_safe) : value %>
-  <div><%= msg %></div>
+<% flash.each do |type, value| %>
+  <% value = [value] unless value.is_a?(Array) %>
+  <% value.each do |v| %>
+    <div class="<%= type == 'notice' ? 'color-success' : 'color-danger' %>" style="margin-bottom: 0.5rem">
+      <%= v %>
+    </div>
+  <% end %>
 <% end %>
 
 <% if @sidekiq_installed %>
-
   <% if @jobs.empty? %>
-    <div><h4>No sidekiq jobs were found in your application</h4></div>
+    <div><h4 class="color-danger">No sidekiq jobs were found in your application</h4></div>
     <div>Please check your autoload configuration and/or your configured sidekiq jobs' paths</div>
 
   <% else %>
-    <% @jobs.each do |j| %>
-      <%= render "job", job: j %>
-    <% end %>
+    <div style="margin-top: 1rem">
+      <% @jobs.each do |j| %>
+        <%= render "job", job: j %>
+      <% end %>
+    </div>
   <% end %>
 
 <% else %>
-  Error: Sidekiq gem is not installed in your application
+  <div><h4 class="color-danger">Error: Sidekiq gem is not installed in your application</h4></div>
 <% end %>

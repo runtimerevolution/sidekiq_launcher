@@ -28,9 +28,9 @@ Or install it yourself as:
 
     $ gem install sidekiq_launcher
 
-Set up Sidekiq Launcher's UI by mounting its routes in your application's ```config/routes.rb```file:
+Set up Sidekiq Launcher's UI by mounting its routes in your application's ```config/routes.rb```file (grouping in RRTools is optional):
 ```ruby
-mount SidekiqLauncher::Engine => '/sidekiq_launcher'
+mount SidekiqLauncher::Engine => '/sidekiq_launcher', defaults: { group: 'RRTools' }
 ```
 
 #### NOTE:
