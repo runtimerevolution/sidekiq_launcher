@@ -1,26 +1,28 @@
-<hr>
-<details>
+<details style="padding-top: 0.4rem; padding-bottom: 0.4rem">
   <summary id=<%="title_job_#{job.file_path}"%>><%=job.job_class%></summary>
   <%= form_with url: sidekiq_launcher_run_path do |f| %>
     <%= f.hidden_field :job_class, value: job.job_class %>
 
-    <small><i><%= f.label job.file_path %></i></small>
+    <div style="margin-top: 0.5rem"><small><i><%= f.label job.file_path %></i></small></div>
 
-    <% job.parameters.each_with_index do |param| %>
-      <%= f.hidden_field "arg_name_#{param[:position]}", value: param[:name] %>
-      <div>
-        <%= f.label param[:name] %>
-        <%= "*" if param[:required] %>:
-        <%= f.text_field "arg_value_#{param[:position]}", required: param[:required]%>
+    <table style="margin-top: 0.5rem; margin-bottom: 0.5rem">
+      <% job.parameters.each_with_index do |param| %>
+        <tr>
+          <%= f.hidden_field "arg_name_#{param[:position]}", value: param[:name] %>
+          <td style="font-size: 10pt"><%= f.label param[:name] %>&nbsp;</td>
+          <td><%= f.text_field "arg_value_#{param[:position]}", required: param[:required]%></td>
 
-        <% if param[:allowed_types].count > 1 %>
-          <%= f.select "arg_type_#{param[:position]}", options_for_select(param[:allowed_types]) %>
-        <% else %>
-          <%= f.label param[:allowed_types][0] %>
-          <%= f.hidden_field "arg_type_#{param[:position]}", value: param[:allowed_types][0] %>
-        <% end %>
-      </div>
-    <% end %>
+          <td>
+            <% if param[:allowed_types].count > 1 %>
+              <%= f.select "arg_type_#{param[:position]}", options_for_select(param[:allowed_types]) %>
+            <% else %>
+              <div class="color-info" style="font-size: 10pt">&nbsp<%= f.label param[:allowed_types][0] %></div>
+              <%= f.hidden_field "arg_type_#{param[:position]}", value: param[:allowed_types][0] %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
 
     <div><%= f.submit 'Run Job' %></div>
   <% end %>

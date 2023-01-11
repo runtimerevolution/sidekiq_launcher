@@ -1,7 +1,8 @@
 # frozen_string_literal: true
 
-require 'validations/job_contract'
+require 'classes/job_loader'
 require 'classes/job'
+require 'validations/job_contract'
 require 'classes/type_parser'
 
 module SidekiqLauncher
@@ -14,7 +15,7 @@ module SidekiqLauncher
 
     # Retrieves the list of sidekiq jobs and all their properties
     def sidekiq_jobs
-      SidekiqLauncher.jobs
+      JobLoader.jobs
     end
 
     # Runs the passed sidekiq job with the passed arguments
@@ -24,7 +25,7 @@ module SidekiqLauncher
       validation = JobContract.new.call(job_class: params[:job_class], arguments: args)
 
       if validation.success?
-        job = SidekiqLauncher.job_props(params[:job_class])
+        job = JobLoader.job_props(params[:job_class])
         params_data = build_job_params(job, args)
 
         if params_data[:success]
