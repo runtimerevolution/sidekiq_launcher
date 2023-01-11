@@ -1,15 +1,32 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Sidekiq Launcher</title>
-  <%= csrf_meta_tags %>
-  <%= csp_meta_tag %>
+  <head>
+    <title>Sidekiq Launcher</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
 
-  <%= stylesheet_link_tag    "sidekiq_launcher/application", media: "all" %>
-</head>
-<body>
-
-<%= yield %>
-
-</body>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/runtimerevolution/rrtools/dist/assets/styleshhets/rrtools@1.0.0-d8d9aea14840c97f19edec7377493c8c.min.css">
+    <%= stylesheet_link_tag    "sidekiq_launcher/application", media: "all" %>
+  </head>
+  <body>
+    <div class="wrapper">
+      <% if SidekiqLauncher.configuration.rrtools_grouped_gems.size.positive? %>
+        <nav>
+          <header>
+            RRTools
+            <span></span>
+          </header>
+          <ul>
+            <li><span>Tools</span></li>
+            <% SidekiqLauncher.configuration.rrtools_grouped_gems.each do |menu| %>
+              <li class="active"><a href='<%= menu[:path] %>'><%= menu[:name].humanize %></a></li>
+            <% end %>
+          </ul>
+        </nav>
+      <% end %>
+      <main>
+        <%= yield %>
+      </main>
+    </div>
+  </body>
 </html>
