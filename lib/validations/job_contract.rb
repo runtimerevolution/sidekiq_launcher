@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'dry/validation'
+require 'classes/job_loader'
 
 module SidekiqLauncher
   # This contract validates all elements of a job before running it
@@ -18,7 +19,7 @@ module SidekiqLauncher
     rule(:job_class) do
       err_msg = "Unable to run #{value} Sidekiq job"
 
-      key.failure("#{err_msg}: Job not loaded.") unless SidekiqLauncher.job_props(value).present?
+      key.failure("#{err_msg}: Job not loaded.") unless JobLoader.job_props(value).present?
       begin
         job_class = value.constantize
         key.failure("#{err_msg}: Method perform_async not found.") unless job_class.methods.include?(:perform_async)
@@ -28,7 +29,7 @@ module SidekiqLauncher
     end
 
     rule(:arguments) do
-      job = SidekiqLauncher.job_props(values[:job_class])
+      job = JobLoader.job_props(values[:job_class])
       key.failure("Job #{values[:job_class]} is not loaded.") unless job.present?
 
       value.each do |arg|
