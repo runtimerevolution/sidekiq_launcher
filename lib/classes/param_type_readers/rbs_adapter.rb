@@ -4,41 +4,41 @@ require_relative 'i_param_type_adapter'
 require 'classes/job'
 
 module ParamTypeReaders
-
-  # TODO: build dictionary on load
-  # [param_name => [allowed_type_a, allowed_type_b]]
-
   # Checks expected parameter types for the passed job, declared in the matching .rbs file
   class RbsAdapter < IParamTypeAdapter
     def initialize(file_path)
       super
-      @file_path = file_path
+      sig_file_path = "#{file_path.delete_prefix('/app/').delete_suffix('.rb')}.rbs"
+      sig_file = Rails.root.join('sig', sig_file_path)
+      return unless File.exist?(sig_file)
+
+      @param_types = build_param_types(sig_file)
     end
 
     # Checks if the current job is available to use the RBS adapter
     def available?
-      # We do not search for the file if we already built the list of parameter type definitions
-      return self if @param_type_defs.present? && @param_type_defs.count.positive?
-
-      sig_file_path = "#{@file_path.delete_prefix('/app/').delete_suffix('.rb')}.rbs"
-      sig_file = Rails.root.join('sig', sig_file_path)
-      return nil unless File.exist?(sig_file)
-
-      @param_type_defs = build_param_types_list(sig_file)
-      @param_type_defs.count.positive? ? self : nil
+      @param_types&.count&.positive? ? self : nil
     end
 
     # Retrieves the type for the passed parameter
     def allowed_types_for(param_name)
-      type_def = @param_type_defs&.grep(/.*#{param_name}\Z/)&.first
-      return build_allowed_types_from_def(type_def) if type_def.present?
-
-      SidekiqLauncher::Job.list_arg_types
+      @param_types[param_name] || SidekiqLauncher::Job.list_arg_types
     end
 
     private
 
-    def build_param_types_list(sig_file)
+    def build_param_types(sig_file)
+      result = {}
+      types_list = read_types_from_file(sig_file)
+      # ["Integer | Numeric number", " Numeric count", " Array[String] | Hash | String stuff"]
+      types_list.each do |entry|
+        param_name = entry.split.last
+        result[param_name] = build_allowed_types_from_def(entry)
+      end
+      result
+    end
+
+    def read_types_from_file(sig_file)
       # Params definitions may include multiple lines
       reading_params = false
       type_lines = []
