@@ -1,5 +1,9 @@
 # frozen_string_literal: true
 
+require_relative 'param_type_readers/default_adapter'
+require_relative 'param_type_readers/rbs_adapter'
+require_relative 'param_type_readers/yard_adapter'
+
 module SidekiqLauncher
   # This class represents a wrapper for a Sidekiq job, containing all its properties
   # and specifications of its parameters
@@ -15,26 +19,31 @@ module SidekiqLauncher
 
     def initialize(job_class)
       root_folder = Rails.application.class.module_parent_name.underscore
-
       @job_class = job_class
       @file_path = Class.const_source_location(job_class.to_s)[0]&.split(root_folder)&.last || 'File not found'
+      @param_types_reader = find_param_types_reader
       @parameters = build_param_details
+    end
+
+    # Retrieves the specifications / properties of the specified parameter
+    # or nil if parameter does not exist
+    def param_specs(param_name)
+      @parameters&.find { |p| p[:name] == param_name }
     end
 
     private
 
     # Build the specification for the parameters of the perform method
     # of the sidekiq job class
-    # TODO: type: nil is there to implement types from RBS
     def build_param_details
       result = []
       begin
         @job_class.new.method(:perform).parameters.each_with_index do |param, i|
           result << {
-            name: param[1],
+            name: param[1].to_s,
             required: param[0].to_s.include?('req'),
             position: i,
-            type: nil
+            allowed_types: @param_types_reader.allowed_types_for(param[1].to_s)
           }
         end
       rescue StandardError => e
@@ -42,6 +51,14 @@ module SidekiqLauncher
       end
 
       result
+    end
+
+    # Picks a parameter type reader for the current job, depending on what
+    # is available to it
+    def find_param_types_reader
+      ParamTypeReaders::RbsAdapter.new(@file_path).available? ||
+        ParamTypeReaders::YardAdapter.new(@file_path).available? ||
+        ParamTypeReaders::DefaultAdapter.new
     end
   end
 end

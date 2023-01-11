@@ -12,7 +12,13 @@
         <%= f.label param[:name] %>
         <%= "*" if param[:required] %>:
         <%= f.text_field "arg_value_#{param[:position]}", required: param[:required]%>
-        <%= f.select "arg_type_#{param[:position]}", options_for_select(arg_types) %>
+
+        <% if param[:allowed_types].count > 1 %>
+          <%= f.select "arg_type_#{param[:position]}", options_for_select(param[:allowed_types]) %>
+        <% else %>
+          <%= f.label param[:allowed_types][0] %>
+          <%= f.hidden_field "arg_type_#{param[:position]}", value: param[:allowed_types][0] %>
+        <% end %>
       </div>
     <% end %>
 

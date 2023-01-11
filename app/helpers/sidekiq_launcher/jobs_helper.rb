@@ -12,11 +12,6 @@ module SidekiqLauncher
       SidekiqLauncher.sidekiq_installed?
     end
 
-    # Lists the possible types of arguments accepted by a sidekiq job
-    def arg_types
-      Job.list_arg_types
-    end
-
     # Retrieves the list of sidekiq jobs and all their properties
     def sidekiq_jobs
       SidekiqLauncher.jobs
@@ -73,8 +68,9 @@ module SidekiqLauncher
       job&.parameters&.each do |param_specs|
         matching_input = find_param_in_input(args, param_specs[:name])
 
-        # We cast the parameter to the passed type unless specified by the parameter's specifications
-        param_value = TypeParser.new.try_parse_as(matching_input[:value], param_specs[:type] || matching_input[:type])
+        # We cast the parameter to the passed type. Type is already validated and we know it to be
+        # in the list of allowed types
+        param_value = TypeParser.new.try_parse_as(matching_input[:value], matching_input[:type])
 
         if param_value.present?
           result << param_value

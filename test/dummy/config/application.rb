@@ -24,7 +24,10 @@ module Dummy
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
     SidekiqLauncher.configure do |config|
-      config.job_paths << Rails.root.join('app', 'test_module')
+      config.job_paths.push(Rails.root.join('app', 'sidekiq_module_b'),
+                            Rails.root.join('app', 'sidekiq_module_c'),
+                            Rails.root.join('app', 'sidekiq_rbs'),
+                            Rails.root.join('app', 'sidekiq_yard'))
     end
   end
 end

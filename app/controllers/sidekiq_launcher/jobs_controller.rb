@@ -7,7 +7,6 @@ module SidekiqLauncher
       @sidekiq_installed = helpers.sidekiq_installed?
       return unless @sidekiq_installed
 
-      @list_arg_types = helpers.arg_types
       @jobs = helpers.sidekiq_jobs
     end
 
