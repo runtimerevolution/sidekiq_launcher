@@ -16,11 +16,18 @@ module ParamTypeReaders
     end
 
     # Checks if the current job is available to use the RBS adapter
+    #
+    # @return [self, nil] Returns self or nil depending on if the Sidekiq Job meets the requirements for the adapter
     def available?
       @param_types&.count&.positive? ? self : nil
     end
 
-    # Retrieves the type for the passed parameter
+    # Returns an array with the allowed types for the passed parameter.
+    # If unable to find any, should return the default list
+    # from SidekiqLauncher::Job.list_arg_types
+    #
+    # @param _param_name [String] The name of the parameter to be checked
+    # @return [Array<Sym>] List of specified types for the passed parameter
     def allowed_types_for(param_name)
       @param_types[param_name] || SidekiqLauncher::Job.list_arg_types
     end
@@ -28,6 +35,9 @@ module ParamTypeReaders
     private
 
     # Builds the list of parameter types for every parameter
+    #
+    # @param sig_file [String] The path to the *.rbs file
+    # @return [Hash { String: Array<Sym> }] A map containing type specifications for every parameter
     def build_param_types(sig_file)
       result = {}
       types_list = read_types_from_file(sig_file)
@@ -39,6 +49,9 @@ module ParamTypeReaders
     end
 
     # Reads the list of parameter types for a single parameter
+    #
+    # @param sig_file [String] The path to the *.rbs file
+    # @return [Array<String>] A non curated list of type specifications for every parameter
     def read_types_from_file(sig_file)
       # Params definitions may include multiple lines
       reading_params = false
@@ -60,6 +73,9 @@ module ParamTypeReaders
     end
 
     # Build a curated list of allowed types from the parameter's type description
+    #
+    # @param type_def [Array<String>] A non curated list of type specifications for every parameter
+    # @return [Array<Sym>] The list of type specifications for every parameter
     def build_allowed_types_from_def(type_def)
       result = []
       # We must check array first, because it could be an array of type

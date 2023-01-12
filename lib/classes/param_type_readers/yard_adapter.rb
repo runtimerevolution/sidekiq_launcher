@@ -14,12 +14,19 @@ module ParamTypeReaders
       @param_types = read_param_types(file)
     end
 
-    # This adapter is only valid if we were able to find type definitions
+    # Checks if the current job is available to use the Yard adapter
+    #
+    # @return [self, nil] Returns self or nil depending on if the Sidekiq Job meets the requirements for the adapter
     def available?
       @param_types&.count&.positive? ? self : nil
     end
 
-    # Returns the param types allowed for the passed parameter
+    # Returns an array with the allowed types for the passed parameter
+    # If unable to find any, should return the default list
+    # from SidekiqLauncher::Job.list_arg_types
+    #
+    # @param _param_name [String] The name of the parameter to be checked
+    # @return [Array<Sym>] List of specified types for the passed parameter
     def allowed_types_for(param_name)
       @param_types[param_name] || SidekiqLauncher::Job.list_arg_types
     end
@@ -27,6 +34,9 @@ module ParamTypeReaders
     private
 
     # Builds the list of parameter types from the Yard docs of the :perform function
+    #
+    # @param file [String] The full path of the Sidekiq job class file
+    # @return [Hash { String: Array<Sym> }] A map containing type specifications for every parameter
     def read_param_types(file)
       result = {}
       reading = false
@@ -62,8 +72,8 @@ module ParamTypeReaders
 
     # Interprets the declared variable types from the passed line
     def read_types(line)
-      # Retrieving types specification and clearing array types
-      line.match(/\[.*?\]/).to_s.gsub(/<.*?>/, '')
+      # Retrieving types specification and clearing array and hash types
+      line.match(/\[.*?\]/).to_s.gsub(/<.*?>/, '').gsub(/{.*?}/, '')
     end
 
     # Builds an array of types from a line describing allowed types for the parameter
@@ -71,7 +81,7 @@ module ParamTypeReaders
       result = []
       result << :array if line.include?('Array')
       result << :integer if line.include?('Integer')
-      result << :number if line.include?('Numeric')
+      result << :number if line.include?('Number')
       result << :boolean if line.include?('Boolean')
       result << :hash if line.include?('Hash')
       result << :string if line.include?('String')
