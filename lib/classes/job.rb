@@ -10,7 +10,7 @@ module SidekiqLauncher
   class Job
     attr_reader :job_class, :file_path, :parameters
 
-    # Retrieves the possible types of arguments accepted by a sidekiq job
+    # Retrieves the possible types of arguments accepted by a sidekiq job.
     # Types are defined as per the sidekiq's documentation on 20 Dec 2022:
     # https://github.com/mperham/sidekiq/wiki/The-Basics
     #

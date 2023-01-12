@@ -22,7 +22,7 @@ module ParamTypeReaders
       @param_types&.count&.positive? ? self : nil
     end
 
-    # Returns an array with the allowed types for the passed parameter
+    # Returns an array with the allowed types for the passed parameter.
     # If unable to find any, should return the default list
     # from SidekiqLauncher::Job.list_arg_types
     #
