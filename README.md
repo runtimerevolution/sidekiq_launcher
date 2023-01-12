@@ -14,19 +14,19 @@ Sidekiq >= 6.5.8
 ### Installing Sidekiq Launcher
 Optionally you can place the `sidekiq_launcher-(version).gem` file in your application's folder.
 
+Install the gem:
+
+    $ gem install sidekiq_launcher
+
 Add this line to your application's Gemfile:
 
 ```ruby
 gem 'sidekiq_launcher'
 ```
 
-And then execute:
+Then execute:
 
     $ bundle install
-
-Or install it yourself as:
-
-    $ gem install sidekiq_launcher
 
 Set up Sidekiq Launcher's UI by mounting its routes in your application's ```config/routes.rb```file (grouping in RRTools is optional):
 ```ruby
