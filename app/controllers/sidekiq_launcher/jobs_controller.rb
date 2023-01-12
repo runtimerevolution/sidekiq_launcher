@@ -3,6 +3,7 @@
 module SidekiqLauncher
   # Controller for running job views
   class JobsController < ApplicationController
+    # Diaplays the view to list all Sidekiq jobs
     def index
       @sidekiq_installed = helpers.sidekiq_installed?
       return unless @sidekiq_installed
@@ -10,6 +11,7 @@ module SidekiqLauncher
       @jobs = helpers.sidekiq_jobs
     end
 
+    # Runs the selected Sidekiq job
     def run
       result = helpers.run_job(params)
 

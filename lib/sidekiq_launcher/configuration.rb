@@ -7,6 +7,7 @@ module SidekiqLauncher
   class Configuration
     attr_reader :job_paths, :rrtools_grouped_gems
 
+    # Initializes the default configuration
     def initialize
       @rrtools_grouped_gems = Rails.application.routes.routes.select { |prop| prop.defaults[:group] == 'RRTools' }
                                    .collect do |route|
@@ -19,7 +20,10 @@ module SidekiqLauncher
       @job_paths = [Rails.root.join('app', 'sidekiq')]
     end
 
-    # Validates and assigns job paths
+    # Validates and sets job paths in the configuration
+    #
+    # @param paths [Array<Pathname, String>, Pathname, String] Paths with Sidekiq job files
+    # @return [Array<Pathname, String>] A list of validated paths
     def job_paths=(paths)
       validated_paths = []
       paths = [paths] unless paths.is_a?(Array)

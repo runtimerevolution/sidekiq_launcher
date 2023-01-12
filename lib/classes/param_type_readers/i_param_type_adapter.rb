@@ -12,7 +12,8 @@ module ParamTypeReaders
     # Checks preconditions to know if the current adapter is available
     # Usually, it is available if it was able to find and interpret the expected types
     # for the job's parameters
-    # Returns self or nil depending on if the Sidekiq Job meets the requirements for the adapter
+    #
+    # @return [self, nil] Returns self or nil depending on if the Sidekiq Job meets the requirements for the adapter
     def available?
       raise 'To be implemented by subclass'
     end
@@ -20,6 +21,9 @@ module ParamTypeReaders
     # Returns an array with the allowed types for the passed parameter
     # If unable to find any, should return the default list
     # from SidekiqLauncher::Job.list_arg_types
+    #
+    # @param _param_name [String] The name of the parameter to be checked
+    # @return [Array<Sym>] List of specified types for the passed parameter
     def allowed_types_for(_param_name)
       raise 'To be implemented by subclass'
     end

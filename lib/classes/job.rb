@@ -13,6 +13,8 @@ module SidekiqLauncher
     # Retrieves the possible types of arguments accepted by a sidekiq job
     # Types are defined as per the sidekiq's documentation on 20 Dec 2022:
     # https://github.com/mperham/sidekiq/wiki/The-Basics
+    #
+    # @return [Array<Sym>] An array containing all valid parameter types to run Sidekiq jobs
     def self.list_arg_types
       %i[string integer number boolean array hash]
     end
@@ -25,16 +27,21 @@ module SidekiqLauncher
       @parameters = build_param_details
     end
 
-    # Retrieves the specifications / properties of the specified parameter
-    # or nil if parameter does not exist
+    # Retrieves the specifications / properties of the specified parameter or nil if parameter does not exist
+    #
+    # @param param_name [<String>] The name of the parameter
+    # @return [Hash { name: String, required: Boolean, psition: Integer, allowed_types: Array<Sym> }] The specifications
+    # of the passed parameter
     def param_specs(param_name)
       @parameters&.find { |p| p[:name] == param_name }
     end
 
     private
 
-    # Build the specification for the parameters of the perform method
-    # of the sidekiq job class
+    # Build the specification for the parameters of the perform method of the sidekiq job class
+    #
+    # @return [Array<Hash { name: String, required: Boolean, psition: Integer, allowed_types: Array<Sym> }>] A list with
+    # the specification of all parameters for this job
     def build_param_details
       result = []
       begin
@@ -55,6 +62,8 @@ module SidekiqLauncher
 
     # Picks a parameter type reader for the current job, depending on what
     # is available to it
+    #
+    # @return [IParamTypeReader] Adapter that reads parameter specifications for this sidekiq job
     def find_param_types_reader
       ParamTypeReaders::RbsAdapter.new(@file_path).available? ||
         ParamTypeReaders::YardAdapter.new(@file_path).available? ||

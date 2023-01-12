@@ -8,18 +8,24 @@ require 'classes/type_parser'
 module SidekiqLauncher
   # This helper encapsulates all logic used to list and run sidekiq jobs from views
   module JobsHelper
-    # Returns whether the Sidekiq gem is installed or not
+    # Checks if Sidekiq gem is installed or not
+    #
+    # @return [Boolean] True if Sidekiq gem is installed
     def sidekiq_installed?
       SidekiqLauncher.sidekiq_installed?
     end
 
-    # Retrieves the list of sidekiq jobs and all their properties
+    # Retrieves the list of Sidekiq jobs and all their properties
+    #
+    # @return [Array<Job>] List of Sidekiq jobs
     def sidekiq_jobs
       JobLoader.jobs
     end
 
     # Runs the passed sidekiq job with the passed arguments
-    # Returns appropraite feedback messages
+    #
+    # @param params [Hash] Parameters from UI input
+    # @return [Hash { success: Boolean, messages: Array<String> }]
     def run_job(params)
       args = prep_params_input(params)
       validation = JobContract.new.call(job_class: params[:job_class], arguments: args)
@@ -41,8 +47,11 @@ module SidekiqLauncher
 
     private
 
-    # Builds an array of arguments from the passed parameters to be fed
+    # Builds an array of arguments from the passed input parameters to be fed
     # to the job contract validator
+    #
+    # @param params [Hash] Parameters from UI input
+    # @return [Array<Hash { name: String, value: String, type: String }>] Array of user inputs for each parameter
     def prep_params_input(params)
       args = []
       incoming_args = params.each.select { |a| a[0]&.include?('arg_name_') }
@@ -61,6 +70,10 @@ module SidekiqLauncher
 
     # Build the job's parameters as an array of parameters with the expected types
     # This array is properly ordered as per the job's parameters
+    #
+    # @param job [Job] The Sidekiq job with expected parameters
+    # @param args [Array<Hash { name: String, value: String, type: String }>] The list of arguments from the input
+    # @return [Array<Hash { success: Boolean, errors: Array<String>, params: Array<Undefined> }>] <description>
     def build_job_params(job, args)
       result = []
       errors = []

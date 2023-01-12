@@ -12,16 +12,22 @@ module SidekiqLauncher
     attr_writer :configuration
 
     # Checks if the Sidekiq gem is installed
+    #
+    # @return [Boolean] True if Sidekiq gem is installed
     def sidekiq_installed?
       Object.const_defined?('Sidekiq')
     end
 
     # Returns the current configuration
+    #
+    # @return [Configuration] The current configuration object
     def configuration
       @configuration ||= Configuration.new
     end
 
     # Resets the current configuration for one with default values
+    #
+    # @return [Configuration] The current configuration object
     def reset_config
       @configuration = Configuration.new
     end
