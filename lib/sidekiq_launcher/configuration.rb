@@ -9,15 +9,23 @@ module SidekiqLauncher
 
     # Initializes the default configuration
     def initialize
-      @rrtools_grouped_gems = Rails.application.routes.routes.select { |prop| prop.defaults[:group] == 'RRTools' }
-                                   .collect do |route|
-        {
-          name: route.name,
-          path: route.path.build_formatter.instance_variable_get('@parts').join
-        }
-      end || []
+      begin
+        @rrtools_grouped_gems = Rails.application.routes.routes.select { |prop| prop.defaults[:group] == 'RRTools' }
+                                     .collect do |route|
+          {
+            name: route.name,
+            path: route.path.build_formatter.instance_variable_get('@parts').join
+          }
+        end || []
+      rescue NoMethodError
+        @rrtools_grouped_gems = []
+      end
 
-      @job_paths = [Rails.root.join('app', 'sidekiq')]
+      begin
+        @job_paths = [Rails.root.join('app', 'sidekiq')]
+      rescue NoMethodError
+        @job_paths = []
+      end
     end
 
     # Validates and sets job paths in the configuration
