@@ -11,7 +11,7 @@ module SidekiqLauncher
     def try_parse(val)
       return unless validate?(val)
 
-      val.in?(%w[true 1])
+      %w[true 1].include?(val)
     end
 
     # Checks if the passed string matches and is convertible to
@@ -20,7 +20,7 @@ module SidekiqLauncher
     # @param string_val [String] The value to be parsed
     # @return [Boolean] True if parsing is possible
     def validate?(string_val)
-      string_val.in?(%w[true false 1 0])
+      %w[true false 1 0].include?(string_val)
     end
   end
 end

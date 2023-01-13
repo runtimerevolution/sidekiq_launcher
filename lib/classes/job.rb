@@ -65,9 +65,9 @@ module SidekiqLauncher
     #
     # @return [IParamTypeReader] Adapter that reads parameter specifications for this sidekiq job
     def find_param_types_reader
-      ParamTypeReaders::RbsAdapter.new(@file_path).available? ||
-        ParamTypeReaders::YardAdapter.new(@file_path).available? ||
-        ParamTypeReaders::DefaultAdapter.new
+      SidekiqLauncher::ParamTypeReaders::RbsAdapter.new(@file_path).available? ||
+        SidekiqLauncher::ParamTypeReaders::YardAdapter.new(@file_path).available? ||
+        SidekiqLauncher::ParamTypeReaders::DefaultAdapter.new
     end
   end
 end

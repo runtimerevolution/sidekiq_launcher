@@ -51,7 +51,9 @@ module SidekiqLauncher
       #
       # @return [Array<String>] A list of all Sidekiq job classes in memory (names include module specification)
       def load_job_classes_from_cache
-        ObjectSpace.each_object(Class).select { |child| child < Sidekiq::Worker::Options && child.include?(Sidekiq::Job) }
+        ObjectSpace.each_object(Class).select do |child|
+          child < Sidekiq::Worker::Options && child.include?(Sidekiq::Job)
+        end
       end
 
       # Loads all classes from the configured paths
