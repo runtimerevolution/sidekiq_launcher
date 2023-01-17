@@ -56,7 +56,7 @@ RSpec.describe SidekiqLauncher::Configuration do
       subject.job_paths = multiple_paths
     end
 
-    it 'accepts only valid paths' do
+    it 'filters valid paths' do
       expect(subject.job_paths.count).to(be(valid_paths.count))
       expect(subject.job_paths).to(eq(valid_paths))
     end

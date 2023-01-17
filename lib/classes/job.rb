@@ -22,7 +22,7 @@ module SidekiqLauncher
     def initialize(job_class)
       root_folder = Rails.application.class.module_parent_name.underscore
       @job_class = job_class
-      @file_path = Class.const_source_location(job_class.to_s)[0]&.split(root_folder)&.last || 'File not found'
+      @file_path = job_class.instance_method(:perform).source_location[0]&.split(root_folder)&.last || 'File not found'
       @param_types_reader = find_param_types_reader
       @parameters = build_param_details
     end

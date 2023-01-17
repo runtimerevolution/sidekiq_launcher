@@ -33,7 +33,7 @@ module SidekiqLauncher
       key.failure("Job #{values[:job_class]} is not loaded.") unless job.present?
 
       value.each do |arg|
-        job_param = job.param_specs(arg[:name])
+        job_param = job&.param_specs(arg[:name])
 
         if job_param.present?
           # checking if passed type exists in list of allowed types
