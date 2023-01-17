@@ -30,7 +30,7 @@ module SidekiqLauncher
       # @param _param_name [String] The name of the parameter to be checked
       # @return [Array<Sym>] List of specified types for the passed parameter
       def allowed_types_for(param_name)
-        @param_types[param_name] || SidekiqLauncher::Job.list_arg_types
+        @param_types&.fetch(param_name, nil) || SidekiqLauncher::Job.list_arg_types
       end
 
       private
