@@ -33,7 +33,7 @@ module SidekiqLauncher
     # @return [Hash { name: String, required: Boolean, psition: Integer, allowed_types: Array<Sym> }] The specifications
     # of the passed parameter
     def param_specs(param_name)
-      @parameters&.find { |p| p[:name] == param_name }
+      @parameters&.find { |p| p.fetch(:name, '--') == param_name }
     end
 
     private

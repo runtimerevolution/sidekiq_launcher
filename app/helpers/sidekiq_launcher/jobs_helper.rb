@@ -29,17 +29,17 @@ module SidekiqLauncher
     # @return [Hash { success: Boolean, messages: Array<String> }]
     def run_job(params, run_job: true)
       args = prep_params_input(params)
-      validation = JobContract.new.call(job_class: params[:job_class], arguments: args)
+      validation = JobContract.new.call(job_class: params.fetch(:job_class, nil), arguments: args)
 
       if validation.success?
-        job = JobLoader.job_props(params[:job_class])
+        job = JobLoader.job_props(params.fetch(:job_class, nil))
         params_data = build_job_params(job, args)
 
-        if params_data[:success]
-          Sidekiq::Client.push('class' => job.job_class, 'args' => params_data[:params]) if run_job
-          { success: true, messages: ["Sidekiq job #{params[:job_class]} started successfully."] }
+        if params_data.fetch(:success, false)
+          Sidekiq::Client.push('class' => job.job_class, 'args' => params_data.fetch(:params, [])) if run_job
+          { success: true, messages: ["Sidekiq job #{params.fetch(:job_class, 'unknown')} started successfully."] }
         else
-          { success: false, messages: params_data[:errors] }
+          { success: false, messages: params_data.fetch(:errors, []) }
         end
       else
         { success: false, messages: validation_error_messages(validation) }
@@ -93,7 +93,7 @@ module SidekiqLauncher
 
       # NOTE: job.parameters are retrieved in order
       job&.parameters&.each do |param_specs|
-        param_name = param_specs[:name]
+        param_name = param_specs.fetch(:name, '-')
         matching_input = find_param_in_input(args, param_name)
 
         unless matching_input.present?
@@ -108,7 +108,8 @@ module SidekiqLauncher
         if param_value.present?
           result << param_value
         else
-          errors << "Argument #{matching_input[:name]} is not a valid #{matching_input[:type]}"
+          errors << "Argument #{matching_input.fetch(:name, 'unknown')} is not a valid " \
+                    "#{matching_input.fetch(:type, 'undefined type')}"
         end
       end
 
@@ -117,14 +118,14 @@ module SidekiqLauncher
 
     # Finds the parameter with the passed name from the list of input arguments
     def find_param_in_input(args, name)
-      args.find { |ag| ag[:name].to_s.eql?(name.to_s) }
+      args.find { |ag| ag.fetch(:name, '').to_s.eql?(name.to_s) }
     end
 
     # Parses the parameter value
     def parse_param_value(matching_input)
-      return unless matching_input&.[](:value).present? && matching_input&.[](:type).present?
+      return unless matching_input&.fetch(:value, nil).present? && matching_input&.fetch(:type, nil).present?
 
-      TypeParser.new.try_parse_as(matching_input[:value], matching_input[:type])
+      TypeParser.new.try_parse_as(matching_input.fetch(:value), matching_input.fetch(:type))
     end
 
     # Returns an array with all validation errors to be presented to the user in the UI
