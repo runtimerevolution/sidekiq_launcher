@@ -12,14 +12,14 @@ module SidekiqLauncher
       optional(:arguments).array(:hash) do
         required(:name).filled(:string)
         required(:value)
-        required(:type).filled(:string)
+        required(:type).filled(:symbol)
       end
     end
 
     rule(:job_class) do
       err_msg = "Unable to run #{value} Sidekiq job"
 
-      key.failure("#{err_msg}: Job not loaded.") unless JobLoader.job_props(value).present?
+      key.failure("#{err_msg}: Job not loaded.") unless JobLoader.job_by_name(value).present?
       begin
         job_class = value.constantize
         key.failure("#{err_msg}: Method perform_async not found.") unless job_class.methods.include?(:perform_async)
@@ -30,7 +30,7 @@ module SidekiqLauncher
 
     rule(:arguments) do
       job_class_name = values.fetch(:job_class, 'unknown')
-      job = JobLoader.job_props(job_class_name)
+      job = JobLoader.job_by_name(job_class_name)
       key.failure("Job #{job_class_name} is not loaded.") unless job.present?
 
       value.each do |arg|
@@ -39,7 +39,7 @@ module SidekiqLauncher
 
         if job_param.present?
           # checking if passed type exists in list of allowed types
-          unless arg.fetch(:type, 'no_type').to_sym.in?(job_param.fetch(:allowed_types, []))
+          unless arg.fetch(:type, 'no_type').in?(job_param.fetch(:allowed_types, []))
             key.failure("Argument type #{arg.fetch(:type, 'undefined')} for argument #{arg_name} " \
                         'does not exist')
           end

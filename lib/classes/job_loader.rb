@@ -24,7 +24,7 @@ module SidekiqLauncher
       #
       # @param class_name [String] The name of the Sidekiq job class (including modules)
       # @return [Job] Specification of the Sidekiq job
-      def job_props(class_name)
+      def job_by_name(class_name)
         @jobs&.find { |j| j.job_class.to_s == class_name }
       end
 

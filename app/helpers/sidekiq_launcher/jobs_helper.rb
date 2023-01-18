@@ -32,8 +32,8 @@ module SidekiqLauncher
       validation = JobContract.new.call(job_class: params.fetch(:job_class, nil), arguments: args)
 
       if validation.success?
-        job = JobLoader.job_props(params.fetch(:job_class, nil))
-        params_data = build_job_params(job, args)
+        job = JobLoader.job_by_name(params.fetch(:job_class, nil))
+        params_data = job&.build_perform_params(args)
 
         if params_data.fetch(:success, false)
           Sidekiq::Client.push('class' => job.job_class, 'args' => params_data.fetch(:params, [])) if run_job
@@ -59,7 +59,7 @@ module SidekiqLauncher
 
       incoming_args.each do |a|
         arg_index = a[0]&.delete_prefix('arg_name_')
-        prepared_input = build_input_param(params, arg_index)
+        prepared_input = build_input_entry(params, arg_index)
         args << prepared_input if prepared_input.present?
       end
 
@@ -72,60 +72,13 @@ module SidekiqLauncher
     # @param arg_index [Integer] The index of the parameter
     # @return [Hash, nil] A hash with a treated parameter with all required data or nil if all\
     # elements are not present
-    def build_input_param(params, arg_index)
+    def build_input_entry(params, arg_index)
       arg_name = params["arg_name_#{arg_index}"]
       arg_val = params["arg_value_#{arg_index}"]
       arg_type = params["arg_type_#{arg_index}"]
       return unless arg_name.present? && arg_val.present? && arg_type.present?
 
-      { name: arg_name, value: arg_val, type: arg_type }
-    end
-
-    # Build the job's parameters as an array of parameters with the expected types
-    # This array is properly ordered as per the job's parameters
-    #
-    # @param job [Job] The Sidekiq job with expected parameters
-    # @param args [Array<Hash { name: String, value: String, type: String }>] The list of arguments from the input
-    # @return [Array<Hash { success: Boolean, errors: Array<String>, params: Array<Undefined> }>] <description>
-    def build_job_params(job, args)
-      result = []
-      errors = []
-
-      # NOTE: job.parameters are retrieved in order
-      job&.parameters&.each do |param_specs|
-        param_name = param_specs.fetch(:name, '-')
-        matching_input = find_param_in_input(args, param_name)
-
-        unless matching_input.present?
-          errors << "Parameter :#{param_name} not found"
-          next
-        end
-
-        # We cast the parameter to the passed type. Type is already validated and we know it to be
-        # in the list of allowed types
-        param_value = parse_param_value(matching_input)
-
-        if param_value.present?
-          result << param_value
-        else
-          errors << "Argument #{matching_input.fetch(:name, 'unknown')} is not a valid " \
-                    "#{matching_input.fetch(:type, 'undefined type')}"
-        end
-      end
-
-      { success: errors.empty?, errors: errors, params: errors.empty? ? result : nil }
-    end
-
-    # Finds the parameter with the passed name from the list of input arguments
-    def find_param_in_input(args, name)
-      args.find { |ag| ag.fetch(:name, '').to_s.eql?(name.to_s) }
-    end
-
-    # Parses the parameter value
-    def parse_param_value(matching_input)
-      return unless matching_input&.fetch(:value, nil).present? && matching_input&.fetch(:type, nil).present?
-
-      TypeParser.new.try_parse_as(matching_input.fetch(:value), matching_input.fetch(:type))
+      { name: arg_name, value: arg_val, type: arg_type.to_sym }
     end
 
     # Returns an array with all validation errors to be presented to the user in the UI

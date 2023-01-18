@@ -24,11 +24,69 @@ RSpec.describe SidekiqLauncher::Job do
     end
   end
 
-  context 'with any job' do
-    it 'instantiates the job with essential data elements' do
+  context 'when instantiating any job' do
+    it 'creates the job with essential data elements' do
       expect(simple_job.job_class).not_to(be_nil)
       expect(simple_job.file_path).not_to(be_nil)
       expect(simple_job.parameters).not_to(be_nil)
+    end
+  end
+
+  context 'when building job parameters' do
+    context 'with valid sets' do
+      let(:job) { described_class.new('LotsOfArgsJob'.constantize) }
+      let(:valid_set) do
+        [
+          { name: 'name', value: 'some_name', type: :string },
+          { name: 'count', value: '1', type: :integer },
+          { name: 'weight', value: '2.0', type: :number },
+          { name: 'height', value: '[1, 2, 3]', type: :array },
+          { name: 'width', value: '1', type: :boolean },
+          { name: 'other', value: '0', type: :boolean }
+        ]
+      end
+      let(:valid_set_with_extras) do
+        valid_set + [
+          { name: 'some', value: 'parameter', type: :string },
+          { name: 'foo', value: 'bar', type: :string }
+        ]
+      end
+      let(:arg_sets) { [valid_set, valid_set_with_extras] }
+
+      it 'correctly builds job parameters' do
+        arg_sets.each do |arg_set|
+          expect(job.build_perform_params(arg_set)).to(
+            eq({ success: true, errors: [], params: ['some_name', 1, 2.0, [1, 2, 3], true, false] })
+          )
+        end
+      end
+    end
+
+    context 'with invalid sets' do
+      let(:job) { described_class.new('HomonymousJob'.constantize) }
+      let(:arg_sets) do
+        {
+          invalid_set: [
+            { name: 'some', value: 'parameter', type: :string },
+            { name: 'foo', value: 'bar', type: :string }
+          ],
+          incomplete_set: [{ name: 'name', value: 'some_name', type: :string }],
+          unexpected_types_set: [
+            { name: 'name', value: 'some_name', type: :string },
+            { name: 'count', value: 'number one', type: :integer }
+          ]
+        }
+      end
+
+      it 'returns error' do
+        arg_sets.each do |_k, arg_set|
+          result = job.build_perform_params(arg_set)
+
+          expect(result[:success]).to(be(false))
+          expect(result[:errors]).not_to(be_empty)
+          expect(result[:params]).to(be(nil))
+        end
+      end
     end
   end
 

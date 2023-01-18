@@ -30,10 +30,10 @@ RSpec.describe SidekiqLauncher::JobLoader do
   end
 
   it 'loads job properties' do
-    expect(described_class.job_props('HomonymousJob')).not_to(be_nil)
+    expect(described_class.job_by_name('HomonymousJob')).not_to(be_nil)
   end
 
   it 'ignores loading properties from non existing job' do
-    expect(described_class.job_props('NonExistingJob')).to(be_nil)
+    expect(described_class.job_by_name('NonExistingJob')).to(be_nil)
   end
 end
