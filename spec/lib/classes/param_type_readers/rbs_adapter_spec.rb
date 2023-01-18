@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'classes/param_type_readers/rbs_adapter'
 require 'classes/job'
