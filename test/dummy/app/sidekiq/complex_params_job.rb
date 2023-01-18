@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'sidekiq'
+
 class ComplexParamsJob
   include Sidekiq::Job
 

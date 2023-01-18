@@ -10,3 +10,5 @@
 /test/dummy/tmp/
 /test/dummy/.byebug_history
 .byebug_history
+test/dummy/config/credentials.yml.enc
+test/dummy/config/master.key
