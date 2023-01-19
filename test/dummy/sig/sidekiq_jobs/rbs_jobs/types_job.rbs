@@ -1,4 +1,4 @@
-module SidekiqRbs
+module RbsJobs
   class TypesJob
     include Sidekiq::Job
 

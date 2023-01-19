@@ -81,6 +81,8 @@ module SidekiqLauncher
         result = []
         Dir.children(path).each do |file_name|
           file = path.to_s.concat("/#{file_name}")
+          next unless File.file?(file)
+
           klass = class_name_from_file(file)
 
           begin

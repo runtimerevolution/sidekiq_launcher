@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-module SidekiqModuleB
+require 'sidekiq'
+
+module ModuleB
   class HomonymousJob
     include Sidekiq::Job
 

@@ -1,4 +1,4 @@
-module SidekiqRbs
+module RbsJobs
   class ComplexTypesJob
     include Sidekiq::Job
 

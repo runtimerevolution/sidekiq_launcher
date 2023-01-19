@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-module SidekiqRbs
+require 'sidekiq'
+
+module RbsJobs
   class ComplexTypesJob
     include Sidekiq::Job
 

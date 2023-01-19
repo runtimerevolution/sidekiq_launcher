@@ -9,7 +9,7 @@ RSpec.describe SidekiqLauncher::ParamTypeReaders::YardAdapter do
   let(:default_types_list) { %i[string integer number boolean array hash] }
 
   context 'with a simple job' do
-    let(:job) { SidekiqLauncher::Job.new(SidekiqYard::TypesJob) }
+    let(:job) { SidekiqLauncher::Job.new(YardJobs::TypesJob) }
 
     it 'is available' do
       expect(adapter.available?).to(be(adapter))
@@ -27,7 +27,7 @@ RSpec.describe SidekiqLauncher::ParamTypeReaders::YardAdapter do
   end
 
   context 'with a job with complex parameters' do
-    let(:job) { SidekiqLauncher::Job.new(SidekiqYard::ComplexTypesJob) }
+    let(:job) { SidekiqLauncher::Job.new(YardJobs::ComplexTypesJob) }
 
     it 'is available' do
       expect(adapter.available?).to(be(adapter))

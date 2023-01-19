@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'sidekiq'
+
 class MisconfiguredJob
   include Sidekiq::Job
 

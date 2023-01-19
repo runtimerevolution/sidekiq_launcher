@@ -108,8 +108,8 @@ RSpec.describe SidekiqLauncher::Job do
   end
 
   context 'with a job with Yard type reader' do
-    let(:yard_simple_job) { described_class.new(SidekiqYard::TypesJob) }
-    let(:yard_complex_job) { described_class.new(SidekiqYard::ComplexTypesJob) }
+    let(:yard_simple_job) { described_class.new(YardJobs::TypesJob) }
+    let(:yard_complex_job) { described_class.new(YardJobs::ComplexTypesJob) }
 
     it 'instantiates a job with a single type for each parameter' do
       expect(yard_simple_job.parameters).to(
@@ -133,8 +133,8 @@ RSpec.describe SidekiqLauncher::Job do
   end
 
   context 'with a job with RBS type reader' do
-    let(:rbs_simple_job) { described_class.new(SidekiqRbs::TypesJob) }
-    let(:rbs_complex_job) { described_class.new(SidekiqRbs::ComplexTypesJob) }
+    let(:rbs_simple_job) { described_class.new(RbsJobs::TypesJob) }
+    let(:rbs_complex_job) { described_class.new(RbsJobs::ComplexTypesJob) }
 
     it 'instantiates a job with a single type for each parameter' do
       expect(rbs_simple_job.parameters).to(

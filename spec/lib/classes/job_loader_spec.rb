@@ -6,9 +6,9 @@ require 'classes/job_loader'
 RSpec.describe SidekiqLauncher::JobLoader do
   let(:valid_jobs) do
     [
-      LotsOfArgsJob, SidekiqYard::TypesJob, SidekiqRbs::TypesJob,
-      SidekiqYard::ComplexTypesJob, SidekiqRbs::ComplexTypesJob,
-      SidekiqModuleC::HomonymousJob, SidekiqModuleB::HomonymousJob,
+      LotsOfArgsJob, YardJobs::TypesJob, RbsJobs::TypesJob,
+      YardJobs::ComplexTypesJob, RbsJobs::ComplexTypesJob,
+      ModuleC::HomonymousJob, ModuleB::HomonymousJob,
       HomonymousJob, NoParamsJob
     ]
   end

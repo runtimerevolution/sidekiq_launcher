@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
-module SidekiqYard
+require 'sidekiq'
+
+module YardJobs
   class TypesJob
     include Sidekiq::Job
 

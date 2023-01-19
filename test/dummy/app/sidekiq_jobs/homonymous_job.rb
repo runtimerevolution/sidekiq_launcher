@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'sidekiq'
+
 class HomonymousJob
   include Sidekiq::Job
 
