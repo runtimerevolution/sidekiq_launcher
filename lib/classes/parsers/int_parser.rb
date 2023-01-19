@@ -24,7 +24,7 @@ module SidekiqLauncher
     # @param string_val [String] The value to be parsed
     # @return [Boolean] True if parsing is possible
     def validate?(string_val)
-      !string_val.match(/^(\d)+$/).nil?
+      !string_val.match(/^(-?\d)+$/).nil?
     end
   end
 end

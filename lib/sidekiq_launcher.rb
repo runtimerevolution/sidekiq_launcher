@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'rails'
 require 'sidekiq_launcher/version'
 require 'sidekiq_launcher/engine'
 require 'sidekiq_launcher/configuration'

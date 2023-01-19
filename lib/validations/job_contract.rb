@@ -12,14 +12,14 @@ module SidekiqLauncher
       optional(:arguments).array(:hash) do
         required(:name).filled(:string)
         required(:value)
-        required(:type).filled(:string)
+        required(:type).filled(:symbol)
       end
     end
 
     rule(:job_class) do
       err_msg = "Unable to run #{value} Sidekiq job"
 
-      key.failure("#{err_msg}: Job not loaded.") unless JobLoader.job_props(value).present?
+      key.failure("#{err_msg}: Job not loaded.") unless JobLoader.job_by_name(value).present?
       begin
         job_class = value.constantize
         key.failure("#{err_msg}: Method perform_async not found.") unless job_class.methods.include?(:perform_async)
@@ -29,26 +29,30 @@ module SidekiqLauncher
     end
 
     rule(:arguments) do
-      job = JobLoader.job_props(values[:job_class])
-      key.failure("Job #{values[:job_class]} is not loaded.") unless job.present?
+      job_class_name = values.fetch(:job_class, 'unknown')
+      job = JobLoader.job_by_name(job_class_name)
+      key.failure("Job #{job_class_name} is not loaded.") unless job.present?
 
       value.each do |arg|
-        job_param = job.param_specs(arg[:name])
+        arg_name = arg.fetch(:name, '')
+        job_param = job&.param_specs(arg_name)
 
         if job_param.present?
           # checking if passed type exists in list of allowed types
-          unless arg[:type].to_sym.in?(job_param[:allowed_types])
-            key.failure("Argument type #{arg[:type]} for argument #{arg[:name]} does not exist")
+          unless arg.fetch(:type, 'no_type').in?(job_param.fetch(:allowed_types, []))
+            key.failure("Argument type #{arg.fetch(:type, 'undefined')} for argument #{arg_name} " \
+                        'does not exist')
           end
 
           # Preventing implicit conversion errors
-          val = (arg[:value].is_a?(String) ? arg[:value].to_s : arg[:value]) || ''
+          arg_val = arg.fetch(:value, '')
+          val = (arg_val.is_a?(String) ? arg_val.to_s : arg_val)
 
           # Failing empty required arguments
-          key.failure("Parameter #{arg[:name]} is required") if job_param[:required] == true &&
-                                                                (!val.present? || val.delete(' ').eql?(''))
+          key.failure("Parameter #{arg_name} is required") if job_param.fetch(:required, true) == true &&
+                                                              (!val.present? || val.delete(' ').eql?(''))
         else
-          key.failure("#{values[:job_class]}.perform does not contain a parameter named #{arg[:name]}")
+          key.failure("#{job_class_name}.perform does not contain a parameter named #{arg_name}")
         end
       end
     end

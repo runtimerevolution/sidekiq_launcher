@@ -32,6 +32,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rails', '>= 7.0.2.2'
   spec.add_development_dependency 'rbs', '>= 2.8.3'
   spec.add_development_dependency 'rbs_rails', '>=0.11.0'
+  spec.add_development_dependency 'rspec-rails', '~> 6.0.0'
   spec.add_development_dependency 'rubocop', '<= 1.41.0'
   spec.add_development_dependency 'sidekiq', '<= 6.5.8'
   spec.add_development_dependency 'yard', '>= 0.9.28'

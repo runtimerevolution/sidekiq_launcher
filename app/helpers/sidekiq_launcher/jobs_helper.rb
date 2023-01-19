@@ -25,20 +25,21 @@ module SidekiqLauncher
     # Runs the passed sidekiq job with the passed arguments
     #
     # @param params [Hash] Parameters from UI input
+    # @param run_job [Boolean] True to actually run the job. True by default
     # @return [Hash { success: Boolean, messages: Array<String> }]
-    def run_job(params)
+    def run_job(params, run_job: true)
       args = prep_params_input(params)
-      validation = JobContract.new.call(job_class: params[:job_class], arguments: args)
+      validation = JobContract.new.call(job_class: params.fetch(:job_class, nil), arguments: args)
 
       if validation.success?
-        job = JobLoader.job_props(params[:job_class])
-        params_data = build_job_params(job, args)
+        job = JobLoader.job_by_name(params.fetch(:job_class, nil))
+        params_data = job&.build_perform_params(args)
 
-        if params_data[:success]
-          Sidekiq::Client.push('class' => job.job_class, 'args' => params_data[:params])
-          { success: true, messages: ["Sidekiq job #{params[:job_class]} started successfully."] }
+        if params_data.fetch(:success, false)
+          Sidekiq::Client.push('class' => job.job_class, 'args' => params_data.fetch(:params, [])) if run_job
+          { success: true, messages: ["Sidekiq job #{params.fetch(:job_class, 'unknown')} started successfully."] }
         else
-          { success: false, messages: params_data[:errors] }
+          { success: false, messages: params_data.fetch(:errors, []) }
         end
       else
         { success: false, messages: validation_error_messages(validation) }
@@ -58,47 +59,26 @@ module SidekiqLauncher
 
       incoming_args.each do |a|
         arg_index = a[0]&.delete_prefix('arg_name_')
-        args << {
-          name: params["arg_name_#{arg_index}"],
-          value: params["arg_value_#{arg_index}"],
-          type: params["arg_type_#{arg_index}"]
-        }
+        prepared_input = build_input_entry(params, arg_index)
+        args << prepared_input if prepared_input.present?
       end
 
       args
     end
 
-    # Build the job's parameters as an array of parameters with the expected types
-    # This array is properly ordered as per the job's parameters
+    # Builds a single parameter input entry from the passed inputs
     #
-    # @param job [Job] The Sidekiq job with expected parameters
-    # @param args [Array<Hash { name: String, value: String, type: String }>] The list of arguments from the input
-    # @return [Array<Hash { success: Boolean, errors: Array<String>, params: Array<Undefined> }>] <description>
-    def build_job_params(job, args)
-      result = []
-      errors = []
+    # @param params [Hash] Parameters from UI input
+    # @param arg_index [Integer] The index of the parameter
+    # @return [Hash, nil] A hash with a treated parameter with all required data or nil if all\
+    # elements are not present
+    def build_input_entry(params, arg_index)
+      arg_name = params["arg_name_#{arg_index}"]
+      arg_val = params["arg_value_#{arg_index}"]
+      arg_type = params["arg_type_#{arg_index}"]
+      return unless arg_name.present? && arg_val.present? && arg_type.present?
 
-      # NOTE: job.parameters are retrieved in order
-      job&.parameters&.each do |param_specs|
-        matching_input = find_param_in_input(args, param_specs[:name])
-
-        # We cast the parameter to the passed type. Type is already validated and we know it to be
-        # in the list of allowed types
-        param_value = TypeParser.new.try_parse_as(matching_input[:value], matching_input[:type])
-
-        if param_value.present?
-          result << param_value
-        else
-          errors << "Argument #{matching_input[:name]} is not a valid #{matching_input[:type]}"
-        end
-      end
-
-      { success: errors.empty?, errors: errors, params: result }
-    end
-
-    # Finds the parameter with the passed name from the list of input arguments
-    def find_param_in_input(args, name)
-      args.find { |ag| ag[:name].to_s.eql?(name.to_s) }
+      { name: arg_name, value: arg_val, type: arg_type.to_sym }
     end
 
     # Returns an array with all validation errors to be presented to the user in the UI

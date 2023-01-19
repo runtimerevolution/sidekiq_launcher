@@ -24,7 +24,7 @@ module SidekiqLauncher
       #
       # @param class_name [String] The name of the Sidekiq job class (including modules)
       # @return [Job] Specification of the Sidekiq job
-      def job_props(class_name)
+      def job_by_name(class_name)
         @jobs&.find { |j| j.job_class.to_s == class_name }
       end
 
@@ -51,7 +51,9 @@ module SidekiqLauncher
       #
       # @return [Array<String>] A list of all Sidekiq job classes in memory (names include module specification)
       def load_job_classes_from_cache
-        ObjectSpace.each_object(Class).select { |child| child < Sidekiq::Worker::Options && child.include?(Sidekiq::Job) }
+        ObjectSpace.each_object(Class).select do |child|
+          child < Sidekiq::Worker::Options && child.include?(Sidekiq::Job)
+        end
       end
 
       # Loads all classes from the configured paths
@@ -79,6 +81,8 @@ module SidekiqLauncher
         result = []
         Dir.children(path).each do |file_name|
           file = path.to_s.concat("/#{file_name}")
+          next unless File.file?(file)
+
           klass = class_name_from_file(file)
 
           begin
