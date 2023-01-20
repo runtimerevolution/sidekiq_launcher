@@ -7,6 +7,8 @@ require 'classes/parsers/int_parser'
 require 'classes/parsers/number_parser'
 
 module SidekiqLauncher
+  # TODO: Consider using dry-rb types for validation and parsing
+
   # This class has the to validate and cast a given String to a defined variable type
   class TypeParser
     # Casts the passed value as the passed type
