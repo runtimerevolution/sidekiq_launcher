@@ -1,6 +1,7 @@
 # Sidekiq Launcher
 
-Sidekiq Launcher provides a User Interface to run Sidekiq jobs without the need of accessing the console.
+Sidekiq Launcher is a gem that provides a user interface for running Sidekiq jobs without having to access the console.
+This readme provides information on how to install and use Sidekiq Launcher, as well as how to configure the gem and contribute to the project.
 
 ## Installation
 
@@ -28,7 +29,9 @@ Then execute:
 
     $ bundle install
 
-Set up Sidekiq Launcher's UI by mounting its routes in your application's ```config/routes.rb```file (grouping in RRTools is optional):
+
+You can set up Sidekiq Launcher's UI by mounting its routes in your application's ```config/routes.rb``` file. You can also group the routes in RRTools (optional) by adding this line:
+
 ```ruby
 mount SidekiqLauncher::Engine => '/sidekiq_launcher', defaults: { group: 'RRTools' }
 ```
@@ -40,7 +43,7 @@ Make sure you have [Sidekiq](https://github.com/mperham/sidekiq) installed as we
 ## Usage
 
 ### User Interface
-To view the UI, simply run the route in your browser:
+To view the UI, run the following route in your browser:
 ```
 http://your_app_path/sidekiq_launcher
 ```
@@ -48,14 +51,34 @@ http://your_app_path/sidekiq_launcher
 
 ### Loading Sidekiq Jobs
 By default Sidekiq Launcher will try to find Sidekiq Jobs in two ways:
-- By reading classes already loaded in your application. Note that this will <u>not</u> work in a development environment unless you configured it to autoload classes on startup;
-- Sidekiq Job class files placed in the '/app/sidekiq' diretory. You can specify one or more paths to direct Sidekiq Launcher to your Job files (see section 'Configuring Sidekiq Launcher' below).
+- By reading classes already loaded in your application. Note that this will not work in a development environment unless you configured it to autoload classes on startup. On the other hand, if you have autoload enabled, you won't need to configure Sidekiq Launcher.
+- By looking for Sidekiq job class files in the ```/app/sidekiq``` directory. You can specify one or more paths to direct Sidekiq Launcher to your job files (see section 'Configuring Sidekiq Launcher' below).
+
+<br>
+
+To load a job, you Sidekiq Job classes <u>must</u> follow these rules:
+- Descend from ```Sidekiq::Worker```
+- Include ```Sidekiq::Job```
+- Have a method named ```perform```
+- Must <u>not</u> have named parameters.
+
+The easiest way to meet these requirements is to follow the [Sidekiq documentation](https://github.com/sidekiq/sidekiq/wiki/Getting-Started).
+
+In there you can find a sample job which meets all these requirements:
+```ruby
+class HardJob
+  include Sidekiq::Job
+
+  def perform(name, count)
+    # do something
+  end
+end
+```
 
 
 ### Defining Job Parameters
-Sidekiq Launcher incorporates RBS and Yard docs support. Job parameter types are automatically defined if properly outlined with either of these gems.
-If your project does not include any of these gems, parameter types will have to be chosen when running Sidekiq Jobs through the UI.
-
+Sidekiq Launcher incorporates RBS and YARD docs support. Job parameter types are automatically defined if properly outlined with either of these gems.
+If your project does not include any of these gems, parameter types will have to be chosen when running Sidekiq jobs through the UI.
 
 ## Sidekiq Launcher Configuration
 
@@ -73,6 +96,23 @@ or
 config = SidekiqLauncher::Configuration.new
 config.job_paths = some_path || [array, of, paths]
 SidekiqLauncher.configuration = config
+```
+
+Note that all paths should be specified individually. Child paths will not be considered.
+
+Paths should be set up relative to your Rails application. The best way to do this is to use ```Railks.root.join()```.
+Below is a sample initializer you can use as an example for your project:
+
+```ruby
+# your_app/config/initializers/sidekiq_launcher.rb
+
+# frozen_string_literal: true
+
+SidekiqLauncher.configure do |config|
+  config.job_paths = [Rails.root.join('app', 'sidekiq_jobs'),
+                      Rails.root.join('app', 'sidekiq_jobs', 'module_b'),
+                      Rails.root.join('app', 'sidekiq_jobs', 'module_c')]
+end
 ```
 
 
